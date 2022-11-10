@@ -7,6 +7,7 @@ Outputs: structures App, State, Grid
 #Requires linking to the defintions:
 """
 
+
 def initialize_data(parameters):
     App = clm_app(parameters)
     State = clm_State(parameters)
@@ -22,13 +23,13 @@ class clm_app:
     def save(self):
         """save class as self.name.txt"""
         printf("Saving App\n")
-        file = open('/OUTPUT/'+self.name+'.txt','w')
+        file = open("/OUTPUT/" + self.name + ".txt", "w")
         file.write(cPickle.dumps(self.__dict__))
         file.close()
 
     def load(self):
         """try load self.name.txt"""
-        file = open('/OUTPUT/'+self.name+'.txt','r')
+        file = open("/OUTPUT/" + self.name + ".txt")
         dataPickle = file.read()
         file.close()
 
@@ -37,7 +38,9 @@ class clm_app:
 
 class clm_state:
     def __init__(self, parameters):
+        printf("Nothing in clm_state __init__ yet\n")
 
 
 class clm_grid:
     def __init__(self, parameters):
+        printf("Nothing in clm_grid __init__ yet\n")
