@@ -37,6 +37,10 @@ def run_clm(App, State, Grid):
 
     # Output (App, State, Grid) to a file
     App.save()
+    State.save()
+    Grid.save()
+
+    #Test loading the files:
     App.load()
-    #State.save()
-    #Grid.save()
+    State.load()
+    Grid.load()

@@ -47,10 +47,42 @@ class clm_app:
 
 class clm_state:
     def __init__(self, parameters):
-        print("Nothing in clm_state __init__ yet\n")
+        self.name = "State_Data"
+
+    def save(self):
+        """save class as self.name.txt"""
+        print("Saving state\n")
+        file = open("/"+mymodule_dir + "/"+self.name + ".txt", "wb")
+        pickle.dump(self,file)
+        file.close()
+
+    def load(self):
+        """try load self.name.txt"""
+        print("Loading state\n")
+        file = open("/"+mymodule_dir + "/"+ self.name + ".txt", "rb")
+        dataPickle = file.read()
+        file.close()
+
+        self = pickle.loads(dataPickle)
 
 
 class clm_grid:
     def __init__(self, parameters):
         self.timeloop: int = 3
-        print("Nothing in clm_grid __init__ yet\n")
+        self.name = "Grid_Data"
+
+    def save(self):
+        """save class as self.name.txt"""
+        print("Saving Grid\n")
+        file = open("/"+mymodule_dir + "/"+self.name + ".txt", "wb")
+        pickle.dump(self,file)
+        file.close()
+
+    def load(self):
+        """try load self.name.txt"""
+        print("Loading Grid\n")
+        file = open("/"+mymodule_dir + "/"+ self.name + ".txt", "rb")
+        dataPickle = file.read()
+        file.close()
+
+        self = pickle.loads(dataPickle)

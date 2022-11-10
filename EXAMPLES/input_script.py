@@ -30,7 +30,7 @@ class clm_parameters:
 
         # Models to include:
         self.model_albedo: bool = True
-        self.model_cloud: bool = False
+        self.model_cloud: bool = True
 
         # Model Parameters
         if self.model_albedo:
