@@ -7,22 +7,14 @@ Outputs: None
 #Requires linking to the defintions:
 initialize_data, run_clm
 """
+import os
+import sys
 
-
-### ---------- Main loop ---------- ###
-def main():
-    # Get the data for the simulation
-    parameters = clm_parameters()
-
-    # Build the main structures using the initial data
-    App, State, Grid = initialize_data(parameters)
-
-    # Run the simulation
-    run_clm(App, State, Grid)
-
-
-# Run the main code
-main()
+script_dir = os.path.dirname( __file__ )
+mymodule_dir = os.path.join( script_dir, '..', 'SRC' )
+sys.path.append( mymodule_dir )
+import initialization
+import run_routine
 
 
 ### ---------- Sim Params ---------- ###
@@ -46,3 +38,19 @@ class clm_parameters:
 
         if self.model_cloud:
             self.default_cloud_conditions: bool = True
+
+
+### ---------- Main loop ---------- ###
+def main():
+    # Get the data for the simulation
+    parameters = clm_parameters()
+
+    # Build the main structures using the initial data
+    App, State, Grid = initialization.initialize_data(parameters)
+
+    # Run the simulation
+    run_routine.run_clm(App, State, Grid)
+
+
+# Run the main code
+main()
