@@ -34,7 +34,9 @@ def run_clm(App, State, Grid):
             print("Running: run_clm - model_albedo, iteration: " + str(i) + "\n")
 
         if App.model_absorbed_emitted_radiation:
-            model_absorbed_emitted_radiation.run_absorbed_emitted_radiation_model(State, Grid, i)
+            model_absorbed_emitted_radiation.run_absorbed_emitted_radiation_model(
+                State, Grid, i
+            )
             print(
                 "Running: run_clm - model_absorbed_emitted_radiation, iteration: "
                 + str(i)

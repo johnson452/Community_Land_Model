@@ -28,7 +28,9 @@ class clm_app:
         self.model_evaporation = parameters.model_evaporation
         self.model_albedo = parameters.model_albedo
         self.model_sensible_heat_flux = parameters.model_sensible_heat_flux
-        self.model_absorbed_emitted_radiation = parameters.model_absorbed_emitted_radiation
+        self.model_absorbed_emitted_radiation = (
+            parameters.model_absorbed_emitted_radiation
+        )
 
     # Savedata: https://stackoverflow.com/questions/2345151/how-to-save-read-class-wholly-in-python
     def save(self):

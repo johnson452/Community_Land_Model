@@ -11,3 +11,7 @@ Then run the following code:
 
 Check the code successfully ran with
 >> vim OUTPUT/a.out
+
+*** Before a pull request, check your branch with ***
+>> nox -s tests
+>> pre-commit run -a

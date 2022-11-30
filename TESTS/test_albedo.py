@@ -6,5 +6,6 @@ Test for verifying the albedo module
 
 """
 
-def test_albedo:
+
+def test_albedo():
     print("Albedo test ran, but currently has no contents\n")
