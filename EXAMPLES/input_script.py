@@ -21,6 +21,8 @@ import run_routine
 # Parameters
 class clm_parameters:
     def __init__(self):
+        # Structure name
+        self.name = "Parameter_Data"
 
         # General parameters:
         self.NZ: int = 10
@@ -57,5 +59,6 @@ def main():
     run_routine.run_clm(App, State, Grid)
 
 
-# Run the main code
-main()
+# Run the main code (The if statement allows us to load this file in diagnostics without running main again, while allowing us to run this file as a script)
+if __name__ == "__main__":
+    main()
