@@ -29,7 +29,7 @@ class clm_parameters:
         self.dz: float = 0.1
         self.time_start: float = 150.5
         self.time_end: float = 151.5
-        self.location: string = "Princeton"
+        self.location: str = "Princeton"
 
         # Models to include:
         self.model_albedo: bool = True
