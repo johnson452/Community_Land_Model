@@ -35,7 +35,7 @@ class clm_parameters:
         self.model_sensible_heat_flux: bool = True
 
         # Model Parameters
-        if self.model_model_albedo:
+        if self.model_albedo:
             self.default_albedo_conditions: bool = True
         if self.model_absorbed_emitted_radiation:
             self.absorbed_emitted_radiation_conditions: bool = True

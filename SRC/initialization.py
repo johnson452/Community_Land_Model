@@ -25,8 +25,10 @@ def initialize_data(parameters):
 class clm_app:
     def __init__(self, parameters):
         self.name = "App_Data"
-        self.model_cloud = parameters.model_cloud
+        self.model_evaporation = parameters.model_evaporation
         self.model_albedo = parameters.model_albedo
+        self.model_sensible_heat_flux = parameters.model_sensible_heat_flux
+        self.model_absorbed_emitted_radiation = parameters.model_absorbed_emitted_radiation
 
     # Savedata: https://stackoverflow.com/questions/2345151/how-to-save-read-class-wholly-in-python
     def save(self):
