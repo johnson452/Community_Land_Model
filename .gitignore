@@ -2,3 +2,4 @@
 OUTPUT
 .tags
 SRC/__pycache__/*
+*__pycache__*
