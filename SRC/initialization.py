@@ -10,15 +10,16 @@ Outputs: structures App, State, Grid
 import os
 import sys
 import pickle
+import numpy as np
 
 script_dir = os.path.dirname(__file__)
 mymodule_dir = os.path.join(script_dir, "..", "OUTPUT")
 
 
 def initialize_data(parameters):
-    App = clm_app(parameters)
-    State = clm_state(parameters)
     Grid = clm_grid(parameters)
+    State = clm_state(parameters, Grid)
+    App = clm_app(parameters)
     return App, State, Grid
 
 
@@ -48,11 +49,24 @@ class clm_app:
         file.close()
 
         self = pickle.loads(dataPickle)
+        return self
 
 
 class clm_state:
-    def __init__(self, parameters):
+    def __init__(self, parameters, Grid):
         self.name = "State_Data"
+
+        # (Albedo data) cosine of the solar zenith angle
+        NT = Grid.NT
+        self.mu = np.zeros(NT)
+        # (Albedo data) Location
+        if parameters.location == "Princeton":
+            self.longitude = (
+                0.794 * 2.0 * np.pi
+            )  # longitude, radians  (positive east of the Greenwich meridian).
+            self.latitude = 0.111 * 2.0 * np.pi  # latitude, radians (from equator)
+        else:
+            assert "Invalid Location Specified"
 
     def save(self):
         """save class as self.name.txt"""
@@ -69,12 +83,24 @@ class clm_state:
         file.close()
 
         self = pickle.loads(dataPickle)
+        return self
 
 
 class clm_grid:
     def __init__(self, parameters):
-        self.timeloop: int = 3
         self.name = "Grid_Data"
+
+        self.time_start: float = parameters.time_start
+        self.time_end: float = parameters.time_end
+        self.total_time: float = parameters.time_end - parameters.time_start
+        dt_approx = 0.1
+        self.NT: int = int(np.ceil(self.total_time / dt_approx))
+        times, dt = np.linspace(self.time_start, self.time_end, self.NT, retstep=True)
+        self.times: float = times
+        self.dt: float = dt  # day fraction, perhaps replace with cfl cond.?
+
+    def time(self, i):
+        return self.times[i]
 
     def save(self):
         """save class as self.name.txt"""
@@ -91,3 +117,4 @@ class clm_grid:
         file.close()
 
         self = pickle.loads(dataPickle)
+        return self

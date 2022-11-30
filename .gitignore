@@ -3,3 +3,8 @@ OUTPUT
 .tags
 SRC/__pycache__/*
 *__pycache__*
+.DS_Store
+
+#Don't Ignore
+!OUTPUT/PLOTS/README.md
+!OUTPUT/README.md

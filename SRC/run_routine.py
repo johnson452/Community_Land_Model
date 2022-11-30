@@ -26,34 +26,26 @@ def run_clm(App, State, Grid):
     print("Running: run_clm\n")
 
     # Run the main timeloop
-    for i in range(Grid.timeloop):
+    for i in range(Grid.NT):
 
         # Run the modules
         if App.model_albedo:
-            model_albedo.run_albedo_model(State, Grid, i)
-            print("Running: run_clm - model_albedo, iteration: " + str(i) + "\n")
+            model_albedo.run_albedo_model(State, Grid, App, i)
+            print("Running: run_clm - model_albedo, iter: " + str(i) + "\n")
 
         if App.model_absorbed_emitted_radiation:
             model_absorbed_emitted_radiation.run_absorbed_emitted_radiation_model(
-                State, Grid, i
+                State, Grid, App, i
             )
-            print(
-                "Running: run_clm - model_absorbed_emitted_radiation, iteration: "
-                + str(i)
-                + "\n"
-            )
+            print("Running: run_clm - model_radiation, iter: " + str(i) + "\n")
 
         if App.model_evaporation:
-            model_evaporation.run_evaporation_model(State, Grid, i)
-            print("Running: run_clm - model_evaporation, iteration: " + str(i) + "\n")
+            model_evaporation.run_evaporation_model(State, Grid, App, i)
+            print("Running: run_clm - model_evaporation, iter: " + str(i) + "\n")
 
         if App.model_sensible_heat_flux:
-            model_sensible_heat_flux.run_sensible_heat_flux_model(State, Grid, i)
-            print(
-                "Running: run_clm - model_sensible_heat_flux, iteration: "
-                + str(i)
-                + "\n"
-            )
+            model_sensible_heat_flux.run_sensible_heat_flux_model(State, Grid, App, i)
+            print("Running: run_clm - model_heat_flux, iter: " + str(i) + "\n")
 
     # Output (App, State, Grid) to a file
     App.save()

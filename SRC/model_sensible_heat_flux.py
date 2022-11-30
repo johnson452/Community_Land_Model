@@ -8,5 +8,5 @@ Outputs: None
 """
 
 
-def run_sensible_heat_flux_model(State, Grid, i):
+def run_sensible_heat_flux_model(State, Grid, App, i):
     print("Running sensible_heat_flux Model\n")

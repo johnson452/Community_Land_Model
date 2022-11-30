@@ -26,9 +26,10 @@ class clm_parameters:
 
         # General parameters:
         self.NZ: int = 10
-        self.NT: int = 10
         self.dz: float = 0.1
-        self.dt: float = 0.1
+        self.time_start: float = 150.5
+        self.time_end: float = 151.5
+        self.location: string = "Princeton"
 
         # Models to include:
         self.model_albedo: bool = True
