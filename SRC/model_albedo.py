@@ -25,7 +25,7 @@ def solar(State, Grid, App, i):
 def solar_zenith_angle(State, Grid, App, i):
     d = Grid.time(i)  # day of the year
     phi = State.latitude
-    eps = 23.44  # Earth's obliquity (Approximately constant)
+    eps = 23.44 * (2 * np.pi / 360)  # Earth's obliquity (Approximately constant)
     lbda = lambda_val(d)  # true longitude of the Earth
     # Eq 3.78 for solar declination
     delta = np.arcsin(np.sin(eps) * np.sin(lbda))
@@ -34,7 +34,7 @@ def solar_zenith_angle(State, Grid, App, i):
     h = 2 * np.pi * d + theta
 
     # Eq 3.76 for solar zenith angle, mu
-    mu = np.sin(phi) * np.cos(delta) - np.cos(phi) * np.cos(delta) * np.cos(h)
+    mu = np.sin(phi) * np.sin(delta) - np.cos(phi) * np.cos(delta) * np.cos(h)
     return mu
 
 
