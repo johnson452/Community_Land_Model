@@ -11,8 +11,9 @@ import os
 import sys
 import pickle
 
-script_dir = os.path.dirname( __file__ )
-mymodule_dir = os.path.join( script_dir, '..', 'OUTPUT' )
+script_dir = os.path.dirname(__file__)
+mymodule_dir = os.path.join(script_dir, "..", "OUTPUT")
+
 
 def initialize_data(parameters):
     App = clm_app(parameters)
@@ -31,14 +32,14 @@ class clm_app:
     def save(self):
         """save class as self.name.txt"""
         print("Saving App\n")
-        file = open("/"+mymodule_dir + "/"+self.name + ".txt", "wb")
-        pickle.dump(self,file)
+        file = open("/" + mymodule_dir + "/" + self.name, "wb")
+        pickle.dump(self, file)
         file.close()
 
     def load(self):
         """try load self.name.txt"""
         print("Loading App\n")
-        file = open("/"+mymodule_dir + "/"+ self.name + ".txt", "rb")
+        file = open("/" + mymodule_dir + "/" + self.name, "rb")
         dataPickle = file.read()
         file.close()
 
@@ -52,14 +53,14 @@ class clm_state:
     def save(self):
         """save class as self.name.txt"""
         print("Saving state\n")
-        file = open("/"+mymodule_dir + "/"+self.name + ".txt", "wb")
-        pickle.dump(self,file)
+        file = open("/" + mymodule_dir + "/" + self.name, "wb")
+        pickle.dump(self, file)
         file.close()
 
     def load(self):
         """try load self.name.txt"""
         print("Loading state\n")
-        file = open("/"+mymodule_dir + "/"+ self.name + ".txt", "rb")
+        file = open("/" + mymodule_dir + "/" + self.name, "rb")
         dataPickle = file.read()
         file.close()
 
@@ -74,14 +75,14 @@ class clm_grid:
     def save(self):
         """save class as self.name.txt"""
         print("Saving Grid\n")
-        file = open("/"+mymodule_dir + "/"+self.name + ".txt", "wb")
-        pickle.dump(self,file)
+        file = open("/" + mymodule_dir + "/" + self.name, "wb")
+        pickle.dump(self, file)
         file.close()
 
     def load(self):
         """try load self.name.txt"""
         print("Loading Grid\n")
-        file = open("/"+mymodule_dir + "/"+ self.name + ".txt", "rb")
+        file = open("/" + mymodule_dir + "/" + self.name, "rb")
         dataPickle = file.read()
         file.close()
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-cloud model:
+Evaporation model:
 Inputs: State, Grid, i
 Outputs: None
 
@@ -8,5 +8,5 @@ Outputs: None
 """
 
 
-def run_cloud_model(State, Grid, i):
-    print("Running Cloud Model\n")
+def run_evaporation_model(State, Grid, i):
+    print("Running evaporation Model\n")

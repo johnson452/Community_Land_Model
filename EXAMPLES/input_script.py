@@ -10,9 +10,9 @@ initialize_data, run_clm
 import os
 import sys
 
-script_dir = os.path.dirname( __file__ )
-mymodule_dir = os.path.join( script_dir, '..', 'SRC' )
-sys.path.append( mymodule_dir )
+script_dir = os.path.dirname(__file__)
+mymodule_dir = os.path.join(script_dir, "..", "SRC")
+sys.path.append(mymodule_dir)
 import initialization
 import run_routine
 
@@ -30,14 +30,19 @@ class clm_parameters:
 
         # Models to include:
         self.model_albedo: bool = True
-        self.model_cloud: bool = True
+        self.model_absorbed_emitted_radiation: bool = True
+        self.model_evaporation: bool = True
+        self.model_sensible_heat_flux: bool = True
 
         # Model Parameters
-        if self.model_albedo:
+        if self.model_model_albedo:
             self.default_albedo_conditions: bool = True
-
-        if self.model_cloud:
-            self.default_cloud_conditions: bool = True
+        if self.model_absorbed_emitted_radiation:
+            self.absorbed_emitted_radiation_conditions: bool = True
+        if self.model_evaporation:
+            self.evaporation_conditions: bool = True
+        if self.model_sensible_heat_flux:
+            self.sensible_heat_conditions: bool = True
 
 
 ### ---------- Main loop ---------- ###

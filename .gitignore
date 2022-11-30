@@ -1,2 +1,4 @@
 # Ignore OUTPUT folder
 OUTPUT
+.tags
+SRC/__pycache__
