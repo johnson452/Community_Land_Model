@@ -30,3 +30,9 @@ def test_albedo():
     # Maybe have a test_parameters script for an easy case
 
     # Assert values for verified outputs (say for mu)
+
+    print("test_albedo currently incomplete")
+
+
+if __name__ == "__main__":
+    test_albedo()
