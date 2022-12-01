@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Albedo model:
-Inputs: State, Grid, i
+Inputs: State, Grid, App, i
 Outputs: None
 
 #Requires linking to the defintions:
