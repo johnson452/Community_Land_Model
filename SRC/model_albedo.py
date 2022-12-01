@@ -6,8 +6,14 @@ Outputs: None
 
 #Requires linking to the defintions:
 """
-
+import os
+import sys
 import numpy as np
+
+script_dir = os.path.dirname(__file__)
+mymodule_dir = os.path.join(script_dir, ".", "TABLES")
+sys.path.append(mymodule_dir)
+import table_3_1_plant_optics
 
 
 def run_albedo_model(State, Grid, App, i):
@@ -15,6 +21,9 @@ def run_albedo_model(State, Grid, App, i):
 
     # Solar Radiation:
     solar(State, Grid, App, i)
+
+    # pft data
+    Chi_L, alpha, tau = table_3_1_plant_optics.plant_props(State.pft)
 
 
 def solar(State, Grid, App, i):

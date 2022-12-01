@@ -65,6 +65,7 @@ class clm_state:
                 0.794 * 2.0 * np.pi
             )  # longitude, radians  (positive east of the Greenwich meridian).
             self.latitude = 0.111 * 2.0 * np.pi  # latitude, radians (from equator)
+            self.pft = "BDT temperate"  # plant functional type (BD: boreal desiduos)
         else:
             assert "Invalid Location Specified"
 
