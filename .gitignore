@@ -1,5 +1,5 @@
 # Ignore OUTPUT folder
-OUTPUT
+OUTPUT/*
 .tags
 SRC/__pycache__/*
 *__pycache__*
