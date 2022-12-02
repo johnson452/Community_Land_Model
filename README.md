@@ -1,5 +1,5 @@
 # Community_Land_Model
-Contributors: Kevin, Henry, Grant
+Contributors: Conghao, Henry, Grant
 Date: 11/09/2022
 
 # Run a sample script and diagnostics
