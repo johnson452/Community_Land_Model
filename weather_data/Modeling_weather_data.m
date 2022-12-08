@@ -1,4 +1,4 @@
-% Temperature model: 
+% Temperature model:
 % T = 55.0901 - 19.6674cos(2*pi*t/365) - 8.6196sin(2*pi*t/365)
 % misfit = 0.1454
 
@@ -155,8 +155,13 @@ phiT = var(Temphat-data(:,2))/var(data(:,2));
 %%visually examine temperature estimation by running the codes below
 % subplot(2,1,1)
 % plot(data(:,1),data(:,2))
-% 
+%
 % subplot(2,1,2)
 % plot(data(:,1),Temphat)
 
-
+% plot (data(:,1),data(:,3))
+GhatH = [ones(365,1), cos(2*pi*t/10)', sin(2*pi*t/10)'];
+mhatH = pinv(GhatH)*data(:,3);
+Hhat = GhatH * mhatH;
+phiH = var(Hhat-data(:,3))/var(data(:,3));
+plot(data(:,1),Hhat)
