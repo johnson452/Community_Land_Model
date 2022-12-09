@@ -288,12 +288,6 @@ def optical_params(State, i, j):
     return I_up, I_down
 
 
-# mu bar calc:
-def mu_bar_and_G_mu(State, Chi_L, i):
-
-    return mu_bar_val, G_mu
-
-
 # From clm5: section 3.3
 def solar_zenith_angle(State, Grid, App, i):
     d = Grid.time(i)  # day of the year
