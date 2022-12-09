@@ -29,9 +29,9 @@ def run_albedo_model(State, Grid, App, i):
     canopy(State, Grid, App, i)
 
 def canopy(State, Grid, App, i):
-    L_up, L_down = canopy_model(State, Grid, App, i)
-    State.L_up[i] = L_up
-    State.L_down[i] = L_down
+    I_up, I_down = canopy_model(State, Grid, App, i)
+    State.I_up[i] = I_up
+    State.I_down[i] = I_down
 
 
 def solar(State, Grid, App, i):
@@ -45,15 +45,11 @@ def canopy_model(State, Grid, App, i):
     # Calculate the optical parameters
     for j in range(2): #[nir/vis model]
         if j == 0:
-            w_lambda_vis, beta_lambda_vis, beta_0_lambda_vis, mu_bar_val, G_mu = optical_params(State, i, j)
+            I_up, I_down = optical_params(State, i, j)
         if j == 1:
-            w_lambda_nir, beta_lambda_nir, beta_0_lambda_nir, mu_bar_val, G_mu = optical_params(State, i, j)
+            I_up, I_down = optical_params(State, i, j)
 
-    # Calculate the caopy fluxes with clm5 eq, 3.1/3.2
-    L_up = 0.0
-    L_down = 0.0
-
-    return L_up, L_down
+    return I_up, I_down
 
 
 # optical parameters:
@@ -62,6 +58,11 @@ def optical_params(State, i, j):
     #Grab the fcan_snow, mu
     fcan_snow = State.fcan_snow[i]
     mu = state.mu[i]
+
+    # Fraction of leaves and stems transmitances, L, S:
+    # approximate models:
+    L = State.L[i]
+    S = State.S[i]
 
     # pft data
     Chi_L, alpha, tau = table_3_1_plant_optics.plant_props(State.pft)
@@ -110,11 +111,6 @@ def optical_params(State, i, j):
 
     # Calculate the mu_bar_val verage inverse diffuse optical depth per unit leaf and stem area
     mu_bar_val = (1/phi2)*(1 - (phi1/phi2)*(np.log((phi1+phi2)/phi1)))
-
-    # Fraction of leaves and stems transmitances, L, S:
-    # approximate models:
-    L = State.L[i]
-    S = State.S[i]
 
     # Caluculate weighted leaf and stem contributions
     w_leaf = L/(L+S)
@@ -224,7 +220,20 @@ def optical_params(State, i, j):
     # For shaded leaves ( 3.28 )
     vector_I_shade_lambda = vector_I_lambda - vector_I_sun_lambda
 
-    return omega_lambda, beta_lambda, beta_0_lambda, mu_bar_val, G_mu
+    # Calculate the canopy fluxes with clm5 eq, 3.1/3.2
+    #dI/d(L+S) -> fraction transmitted, 1 layer assumption:
+    #dI_up/d(L+S) = (L+S)*I_up
+    omega = omega_lambda
+    Beta = omega_lambda_beta_lambda/omega
+    Beta_0 = omega_lambda_beta_lambda_0/omega
+    z_plus = mu_bar_val*(L+S) + (1-(1-Beta)*omega)
+    z_minus = -mu_bar_val*(L+S) + (1-(1-Beta)*omega)
+    z1 = omega*mu_bar_val*K*np.exp(-K*(L+S))
+    I_up =  (1/(1- omega*omega*Beta*Beta/(z_minus*z_plus))) * (omega*Beta*z1*(1-Beta_0)/(z_minus*z_plus) + z1*Beta_0)
+    I_down = omega*Beta*I_up/z_plus + z1*(1-Beta_0)/z_plus
+    # Upgrade to Rk4 with better canopy model!!
+
+    return I_up, I_down
 
 
 
