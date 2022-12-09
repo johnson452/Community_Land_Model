@@ -41,7 +41,29 @@ def diagnostics():
     str_val_y = str("mu")
     plot_general(X, Y, str_val_x, str_val_y)
 
+    Y = State.L_up
+    str_val_y = str("L_up")
+    plot_general(X, Y, str_val_x, str_val_y)
 
+    Y = State.L_down
+    str_val_y = str("L_down")
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.fcan_snow
+    str_val_y = str("fcan_snow")
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.fsno
+    str_val_y = str("fsno")
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.L
+    str_val_y = str("L, Leaf Coverage Frac")
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.S
+    str_val_y = str("S, Stem Coverage Frac")
+    plot_general(X, Y, str_val_x, str_val_y)
 
 
 
