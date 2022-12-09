@@ -91,7 +91,7 @@ class clm_state:
                 self.fsno[i] = 0.3 * (
                     np.sin(phase + np.pi / 2) * np.sin(phase + np.pi / 2)
                 )
-                self.L[i] = 0.15 + 0.8 * (np.sin(phase) * np.sin(phase))
+                self.L[i] = 0.15 + 0.5 * (np.sin(phase) * np.sin(phase))
                 self.S[i] = 0.05 + 0.25 * (
                     np.sin(phase + np.pi / 2) * np.sin(phase + np.pi / 2)
                 )
