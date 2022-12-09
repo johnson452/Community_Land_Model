@@ -14,6 +14,9 @@ script_dir = os.path.dirname(__file__)
 mymodule_dir = os.path.join(script_dir, ".", "TABLES")
 sys.path.append(mymodule_dir)
 import table_3_1_plant_optics
+mymodule_dir = os.path.join(script_dir, ".", "METHODS")
+sys.path.append(mymodule_dir)
+import time_integration
 
 
 def run_albedo_model(State, Grid, App, i):
@@ -22,13 +25,213 @@ def run_albedo_model(State, Grid, App, i):
     # Solar Radiation:
     solar(State, Grid, App, i)
 
-    # pft data
-    Chi_L, alpha, tau = table_3_1_plant_optics.plant_props(State.pft)
+    #Canopy Radiative Model ( depends on solar mu )
+    canopy(State, Grid, App, i)
+
+def canopy(State, Grid, App, i):
+    L_up, L_down = canopy_model(State, Grid, App, i)
+    State.L_up[i] = L_up
+    State.L_down[i] = L_down
 
 
 def solar(State, Grid, App, i):
     State.mu[i] = solar_zenith_angle(State, Grid, App, i)
 
+
+# From clm5: section 3.1, canopy model/radiative fluxes
+def canopy_model(State, Grid, App, i):
+
+    # Calculate the bar(mu) average inverse diffuse optical depth per unit leaf and stem area
+    # Calculate the optical parameters
+    for j in range(2): #[nir/vis model]
+        if j == 0:
+            w_lambda_vis, beta_lambda_vis, beta_0_lambda_vis, mu_bar_val, G_mu = optical_params(State, i, j)
+        if j == 1:
+            w_lambda_nir, beta_lambda_nir, beta_0_lambda_nir, mu_bar_val, G_mu = optical_params(State, i, j)
+
+    # Calculate the caopy fluxes with clm5 eq, 3.1/3.2
+    L_up = 0.0
+    L_down = 0.0
+
+    return L_up, L_down
+
+
+# optical parameters:
+def optical_params(State, i, j):
+
+    #Grab the fcan_snow, mu
+    fcan_snow = State.fcan_snow[i]
+    mu = state.mu[i]
+
+    # pft data
+    Chi_L, alpha, tau = table_3_1_plant_optics.plant_props(State.pft)
+
+    # Determine wavelength:
+    if j == 0:
+        # Grab vis Parameters (Tables 3.1 / 3.2)
+        alpha_lambda_leaf = alpha[0]
+        alpha_lambda_stem = alpha[2]
+        tau_lambda_leaf = tau[0]
+        tau_lambda_stem = tau[2]
+        omega_lambda_snow = 0.8
+        beta_lambda_snow = 0.5
+        beta_lambda_snow_0 = 0.5
+        # Soil albedos and snow fraction (approximated - average no angle dep)
+        # Table 3.3
+        a_soi_lambda_mu = 0.25
+        a_soi_lambda = a_soi_lambda_mu
+        a_sno_lambda_mu = 0.9
+        a_sno_lambda = a_sno_lambda_mu
+        fsno = State.fsno[i]
+
+    if j == 1:
+        # Grab nir Parameters (Tables 3.1 / 3.2)
+        alpha_lambda_leaf = alpha[1]
+        alpha_lambda_stem = alpha[3]
+        tau_lambda_leaf = tau[1]
+        tau_lambda_stem = tau[3]
+        omega_lambda_snow = 0.4
+        beta_lambda_snow = 0.5
+        beta_lambda_snow_0 = 0.5
+        # Soil albedos and snow fraction (approximated - average no angle dep)
+        # Table 3.3
+        a_soi_lambda_mu = 0.5
+        a_soi_lambda = a_soi_lambda_mu
+        a_sno_lambda_mu = 0.5
+        a_sno_lambda = a_sno_lambda_mu
+        fsno = State.fsno[i]
+
+    # Only valid for -0.4 < Xl < 0.6, but we assume validity to -0.5
+    phi1 = 0.5 - 0.633*Chi_L - 0.33*Chi_L*Chi_L
+    phi2 = 0.877*(1 - 2*phi1)
+
+    #Calculate Eq 3.3 relative projected area of leaves and stems in the direction cos−1 𝜇
+    G_mu = phi1 + phi2*mu
+
+    # Calculate the mu_bar_val verage inverse diffuse optical depth per unit leaf and stem area
+    mu_bar_val = (1/phi2)*(1 - (phi1/phi2)*(np.log((phi1+phi2)/phi1)))
+
+    # Fraction of leaves and stems transmitances, L, S:
+    # approximate models:
+    L = State.L[i]
+    S = State.S[i]
+
+    # Caluculate weighted leaf and stem contributions
+    w_leaf = L/(L+S)
+    w_stem = S/(L+S)
+
+    # Calculate [vis nir - wavelength] properties: 3.11, 3.12
+    # (alpha, tau -> weighted avgs.)
+    alpha_lambda = alpha_lambda_leaf*w_leaf + alpha_lambda_stem*w_stem
+    tau_lambda = tau_lambda_leaf*w_leaf + tau_lambda_stem*w_stem
+    w_lambda_veg = alpha_lambda*( 1 + tau_lambda)
+
+    # optical parameters: 3.5
+    omega_lambda = omega_lambda_veg*(1-fcan_snow) + omega_lambda_snow*fcan_snow
+
+    # Calculate the mean leaf inclination angle
+    cos_theta_bar = (1 + Chi_L)/2
+
+    # Calclate the upscatter for diffuse radiation
+    omega_lambda_veg_times_beta_lambda_veg = 0.5*(alpha_lambda + tau_lambda + (alpha_lambda - tau_lambda)*cos_theta_bar*cos_theta_bar)
+
+    # single scattering albedo (3.16)
+    a_s_mu_lambda = (omega_veg_lambda/2) * (G_mu/np.min(mu*phi2 +G_mu, 1e-6)) * (1 -  ( mu*phi1/np.min(mu*phi2 +G_mu, 1e-6) )*( np.log(  (mu*phi1 + np.min(mu*phi2 + G_mu, 1e-6))/(mu_phi1)  ) ))
+
+    # K: optical depth of direct beam per unit leaf and stem area
+    K = G_mu/mu
+
+    # Calculate upscatter for direct beam radiation (3.15)
+    omega_lambda_veg_times_beta_lambda_veg_0 = ( (1 + mu_bar_val*K)/(mu_bar_val*K) )*a_s_mu_lambda
+
+
+    # optical parameters: 3.5 (3.6 - 3.7) & ()3.8 - 3.10)
+    omega_lambda_beta_lambda = omega_lambda_veg_times_beta_lambda_veg*(1-fcan_snow) + omega_lambda_snow*beta_lambda_snow*fcan_snow
+    omega_lambda_beta_lambda_0 = omega_lambda_veg_times_beta_lambda_veg_0*(1-fcan_snow) + omega_lambda_snow*beta_lambda_snow_0*fcan_snow
+
+
+    # Calculate various components, to simplify math: (3.31-3.57)
+    c = omega_lambda*omega_lambda_beta_lambda
+    b = 1 - omega_lambda + c
+    d = mu_bar_val*K*omega_lambda_beta_lambda_0
+    f = omega_lambda*mu_bar_val*K - d
+    h = np.sqrt(b*b - c*c)/mu_bar_val
+    sigma = mu_bar_val*mu_bar_val*K*K + c*c - b*b
+    u1_mu = b - c / a_g_lambda_mu
+    u2_mu = b - c * a_g_lambda_mu
+    u3_mu = f + c * a_g_lambda_mu
+    u1 = b - c / a_g_lambda
+    u2 = b - c * a_g_lambda
+    u3 = f + c * a_g_lambda
+    s1 = np.exp(-np.min(h*(L+S),40))
+    s2 = np.exp(-np.min(K*(L+S),40))
+    p1 = b + mu_bar_val*h
+    p2 = b - mu_bar_val*h
+    p3 = b + mu_bar_val*K
+    p4 = b - mu_bar_val*K
+    d1_mu = p1*(u1_mu-u_bar_val*h)/s1 - p2*(u1_mu + mu_bar_val*h)*s1
+    d2_mu = (u2_mu+u_bar_val*h)/s1 - (u2_mu - mu_bar_val*h)*s1
+    d1 = p1*(u1-u_bar_val*h)/s1 - p2*(u1 + mu_bar_val*h)*s1
+    d2 = (u2+u_bar_val*h)/s1 - (u2 - mu_bar_val*h)*s1
+
+    # use mu quantities
+    h1 = -d*p4 - c*f
+    h2 =  (1/d1_mu)*( (d-(h1/sigma)*p3)*((u1_mu-mu_bar_val*h)/s1) - p2*(d - c - (h1/sigma)*(u1_mu + mu_bar_val*K))*s2 )
+    h3 = -(1/d1_mu)*( (d-(h1/sigma)*p3)*((u1_mu+mu_bar_val*h)*s1) - p1*(d - c - (h1/sigma)*(u1_mu + mu_bar_val*K))*s2 )
+    h4 = -f*p3 - c*d
+    h5 = -(1/d2_mu)*( (h4*(u2_mu + mu_bar_val*h)/(simga*s1)) + (u3_mu - (h4/sigma)*(u2_mu - mu_bar_val*K))*s2 )
+    h6 =  (1/d1_mu)*( (s1*h4*(u2_mu - mu_bar_val*h)/(simga)) + (u3_mu - (h4/sigma)*(u2_mu - mu_bar_val*K))*s2 )
+
+    # Don't use mu quantities
+    h7 =  c*(u1 - mu_bar_val*h)/(d1*s1)
+    h8 = -s1*c*(u1 + mu_bar_val*h)/(d1)
+    h9 = (u2 + mu_bar_val*h)/(d2*s1)
+    h10 = -s1*(u2 - mu_bar_val*h)/(d2)
+
+
+    a1_mu = (h1/sigma)*((1-s2*s2)/(2*K)) + h2*((1-s2*s1)/(K+h)) + h3*((1 - s2/s1)/(K-h))
+    a2_mu = (h4/sigma)*((1-s2*s2)/(2*K)) + h5*((1-s2*s1)/(K+h)) + h6*((1 - s2/s1)/(K-h))
+    a1 = h7*((1-s2*s1)/(K+h)) + h8*((1 - s2/s1)/(K-h))
+    a2 = h9*((1-s2*s1)/(K+h)) + h10*((1 - s2/s1)/(K-h))
+
+
+    # Calculate the surface albedos ( 3.17- 3.20)
+    # (upward diffuse fluxes per unit incident direct beam and diffuse flux)
+    I_up_lambda_mu = h1/sigma + h2 + h3
+    I_up_lambda = h7 + h8
+
+    # (downward diffuse fluxes per unit incident direct beam and diffuse radiation)
+    I_down_lambda_mu = (h4/sigma)*np.exp(-K*(L+S)) + h5*s1 + h6/s1
+    I_down_lambda = h9*s1 + h10/s1
+
+    # Caluculate (Ground albedos Section 3.2)
+    a_g_lambda_mu = a_soi_lambda_mu*(1 - fsno) + a_sno_lambda_mu*fsno
+    a_g_lambda = a_soi_lambda*(1 - fsno) + a_sno_lambda*fsno
+
+    # Calculate same per incident flux (3.21-3.22 )
+    # (direct beam and diffuse fluxes absorbed by the vegetation, per unit incident flux)
+    vector_I_lambda_mu = 1 - I_up_lambda_mu - (1 - a_g_lambda)*I_down_lambda_mu - (1 - a_g_lambda_mu)*np.exp(-K*(L+S))
+    vector_I_lambda = 1 - I_up_lambda - (1 - a_g_lambda)*I_down_lambda
+
+
+    # The absorption of direct beam radiation by sunlit leaves ( 3.23 )
+    vector_I_sun_lambda_mu = (1 - omega_lambda) * (1 - s2 + (1/mu_bar_val)*(a1_mu + a2_mu))
+    # For shaded leaves is (3.24)
+    vector_I_shade_lambda_mu = vector_I_lambda_mu - vector_I_sun_lambda_mu
+
+    # For diffuse radiation, the absorbed radiation for sunlit leaves is (3.27)
+    vector_I_sun_lambda = (1 - omega_lambda) * ((1/mu_bar_val)*(a1 + a2))
+    # For shaded leaves ( 3.28 )
+    vector_I_shade_lambda = vector_I_lambda - vector_I_sun_lambda
+
+    return omega_lambda, beta_lambda, beta_0_lambda, mu_bar_val, G_mu
+
+
+
+# mu bar calc:
+def mu_bar_and_G_mu(State, Chi_L, i):
+
+    return mu_bar_val, G_mu
 
 # From clm5: section 3.3
 def solar_zenith_angle(State, Grid, App, i):
