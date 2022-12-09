@@ -8,6 +8,7 @@ SRC/model_albedo.py
 
 import os
 import sys
+import pytest
 
 script_dir = os.path.dirname(__file__)
 mymodule_dir = os.path.join(script_dir, "..", "SRC")
@@ -26,11 +27,17 @@ def test_albedo():
     parameters = input_script.clm_parameters()
     App, State, Grid = initialization.initialize_data(parameters)
 
-    # Maybe have a test_parameters script for an easy case
+    # Test standalone functions
+    assert -1.3316125255128681 == pytest.approx(model_albedo.lambda_val(5), 1e-6)
+    assert -1.288300049079258 == pytest.approx(model_albedo.lambda_val(7.5), 1e-6)
 
-    # Assert values for verified outputs (say for mu)
-
-    print("test_albedo currently incomplete")
+    # Test integrated function: *MAY FAIL IF PARAMETERS ARE ALTERED*
+    assert -0.44487413335802434 == pytest.approx(
+        model_albedo.solar_zenith_angle(State, Grid, App, 0), 1e-6
+    )
+    assert -0.8066919738836718 == pytest.approx(
+        model_albedo.solar_zenith_angle(State, Grid, App, 1), 1e-6
+    )
 
 
 if __name__ == "__main__":

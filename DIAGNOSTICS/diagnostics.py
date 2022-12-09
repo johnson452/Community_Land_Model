@@ -34,26 +34,49 @@ def diagnostics():
     State = State.load()
     Grid.load()
 
-    # Build the common plots
-    plot_mu(App, State, Grid)
+    # Build the desired plots
+    X = Grid.times
+    Y = State.mu
+    str_val_x = "time"
+    str_val_y = "mu"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.I_up
+    str_val_y = "I_up"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.I_down
+    str_val_y = "I_down"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.fcan_snow
+    str_val_y = "fcan_snow"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.fsno
+    str_val_y = "fsno"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.L
+    str_val_y = "L, Leaf Coverage Frac"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.S
+    str_val_y = "S, Stem Coverage Frac"
+    plot_general(X, Y, str_val_x, str_val_y)
 
 
 # Build the mu vs t plot and save it
-def plot_mu(App, State, Grid):
-
-    # Analyse and plot data
-    times = Grid.times
-    mu = State.mu
-
-    # Compute quantities on data
+def plot_general(X, Y, str_val_x, str_val_y):
 
     # Plot commonly wanted things (T(t), etc.)
-    plt.plot(times, mu)
-    plt.xlabel("times")
-    plt.ylabel("mu")
-    file = mymodule_dir_output_plot + "mu_v_time.png"
+    plt.plot(X, Y)
+    plt.xlabel(str_val_x)
+    plt.ylabel(str_val_y)
+    file = mymodule_dir_output_plot + str_val_y + "_v_" + str_val_x + ".png"
     plt.savefig(file)
-    print("Saving mu vs t plot\n")
+    print("Saving " + str_val_y + " vs " + str_val_x + " plot\n")
+    plt.clf()
 
 
 # Assumes the input_script.py holds the model Parameters
