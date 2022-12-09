@@ -63,8 +63,8 @@ class clm_state:
         # L, S, fraction of ground covered by Leafs, and Stems
         NT = Grid.NT
         self.mu = np.zeros(NT)
-        self.L_up = np.zeros(NT)
-        self.L_down = np.zeros(NT)
+        self.I_up = np.zeros(NT)
+        self.I_down = np.zeros(NT)
         self.fcan_snow = np.zeros(NT)
         self.fsno = np.zeros(NT)
         self.L = np.zeros(NT)
@@ -72,23 +72,29 @@ class clm_state:
 
         # (Albedo data) Location
         if parameters.location == "Princeton":
-            #Locational parameters
+            # Locational parameters
             self.longitude = (
                 0.794 * 2.0 * np.pi
             )  # longitude, radians  (positive east of the Greenwich meridian).
             self.latitude = 0.111 * 2.0 * np.pi  # latitude, radians (from equator)
             self.pft = "BDT temperate"  # plant functional type (BD: boreal desiduos)
-            #Assumes identical snow models
+            # Assumes identical snow models
             # 95% leaf coverage mid summer, 15% winter
             # 5% stem coverage mid summer, 30% winter
             # 0% snow summer, 30% winter
             for i in range(NT):
-                t = Grid.time(grid, i)
-                phase = np.pi*(t/365.25)
-                self.fcan_snow[i] = 0.3*(np.sin(phase+pi/2)*np.sin(phase+pi/2))
-                self.fsno[i] = 0.3*(np.sin(phase+pi/2)*np.sin(phase+pi/2))
-                self.L[i] = 0.15 + 0.8*(np.sin(phase)*np.sin(phase))
-                self.S[i] = 0.05 + 0.25*(np.sin(phase+pi/2)*np.sin(phase+pi/2))
+                t = Grid.time(i)
+                phase = np.pi * (t / 365.25)
+                self.fcan_snow[i] = 0.3 * (
+                    np.sin(phase + np.pi / 2) * np.sin(phase + np.pi / 2)
+                )
+                self.fsno[i] = 0.3 * (
+                    np.sin(phase + np.pi / 2) * np.sin(phase + np.pi / 2)
+                )
+                self.L[i] = 0.15 + 0.8 * (np.sin(phase) * np.sin(phase))
+                self.S[i] = 0.05 + 0.25 * (
+                    np.sin(phase + np.pi / 2) * np.sin(phase + np.pi / 2)
+                )
         else:
             assert "Invalid Location Specified"
 
