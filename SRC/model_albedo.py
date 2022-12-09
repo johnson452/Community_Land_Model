@@ -270,8 +270,8 @@ def optical_params(State, i, j):
     omega = omega_lambda
     Beta = omega_lambda_beta_lambda / omega
     Beta_0 = omega_lambda_beta_lambda_0 / omega
-    z_plus = mu_bar_val * (L + S) + (1 - (1 - Beta) * omega)
-    z_minus = -mu_bar_val * (L + S) + (1 - (1 - Beta) * omega)
+    z_plus = mu_bar_val * (-1) + (1 - (1 - Beta) * omega)
+    z_minus = -mu_bar_val * (-1) + (1 - (1 - Beta) * omega)
     z1 = omega * mu_bar_val * K * np.exp(-K * (L + S))
     I_up = (1 / (1 - omega * omega * Beta * Beta / (z_minus * z_plus))) * (
         omega * Beta * z1 * (1 - Beta_0) / (z_minus * z_plus) + z1 * Beta_0
