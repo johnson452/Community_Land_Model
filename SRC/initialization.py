@@ -67,6 +67,16 @@ class clm_state:
         self.I_down_vis = np.zeros(NT)
         self.I_up_nir = np.zeros(NT)
         self.I_down_nir = np.zeros(NT)
+
+        self.I_sun_vis_mu = np.zeros(NT)
+        self.I_sun_nir_mu = np.zeros(NT)
+        self.I_shade_vis_mu = np.zeros(NT)
+        self.I_shade_nir_mu = np.zeros(NT)
+        self.I_sun_vis = np.zeros(NT)
+        self.I_sun_nir = np.zeros(NT)
+        self.I_shade_vis = np.zeros(NT)
+        self.I_shade_nir = np.zeros(NT)
+
         self.fcan_snow = np.zeros(NT)
         self.fsno = np.zeros(NT)
         self.L = np.zeros(NT)

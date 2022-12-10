@@ -73,6 +73,38 @@ def diagnostics():
     str_val_y = "S, Stem Coverage Frac"
     plot_general(X, Y, str_val_x, str_val_y)
 
+    Y = State.I_sun_vis_mu
+    str_val_y = "I_sun_vis_mu"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.I_sun_nir_mu
+    str_val_y = "I_sun_nir_mu"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.I_shade_vis_mu
+    str_val_y = "I_sun_vis_mu"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.I_shade_nir_mu
+    str_val_y = "I_sun_nir_mu"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.I_sun_vis
+    str_val_y = "I_sun_vis"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.I_sun_nir
+    str_val_y = "I_sun_nir"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.I_shade_vis
+    str_val_y = "I_sun_vis"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.I_shade_nir
+    str_val_y = "I_sun_nir"
+    plot_general(X, Y, str_val_x, str_val_y)
+
 
 # Build the mu vs t plot and save it
 def plot_general(X, Y, str_val_x, str_val_y):

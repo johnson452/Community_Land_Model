@@ -36,16 +36,31 @@ def canopy(State, Grid, App, i):
 
     # Run the canopy model for both ir and vis
     for j in range(2):  # [vis/nir model]
-        I_up, I_down = canopy_model(State, Grid, App, i, j)
+        (
+            I_up,
+            I_down,
+            vector_I_sun_lambda_mu,
+            vector_I_shade_lambda_mu,
+            vector_I_sun_lambda,
+            vector_I_shade_lambda,
+        ) = canopy_model(State, Grid, App, i, j)
 
         # Save to vis or nir
         if j == 0:
             State.I_up_vis[i] = I_up
             State.I_down_vis[i] = I_down
+            State.I_sun_vis_mu[i] = vector_I_sun_lambda_mu
+            State.I_shade_vis_mu[i] = vector_I_shade_lambda_mu
+            State.I_sun_vis[i] = vector_I_sun_lambda
+            State.I_shade_vis[i] = vector_I_shade_lambda
 
         if j == 1:
             State.I_up_nir[i] = I_up
             State.I_down_nir[i] = I_down
+            State.I_sun_nir_mu[i] = vector_I_sun_lambda_mu
+            State.I_shade_nir_mu[i] = vector_I_shade_lambda_mu
+            State.I_sun_nir[i] = vector_I_sun_lambda
+            State.I_shade_nir[i] = vector_I_shade_lambda
 
 
 def solar(State, Grid, App, i):
@@ -58,12 +73,33 @@ def canopy_model(State, Grid, App, i, j):
     # Calculate the bar(mu) average inverse diffuse optical depth per unit leaf and stem area
     # Calculate the optical parameters
     if j == 0:
-        I_up, I_down = optical_params(State, i, j)
+        (
+            I_up,
+            I_down,
+            vector_I_sun_lambda_mu,
+            vector_I_shade_lambda_mu,
+            vector_I_sun_lambda,
+            vector_I_shade_lambda,
+        ) = optical_params(State, i, j)
 
     if j == 1:
-        I_up, I_down = optical_params(State, i, j)
+        (
+            I_up,
+            I_down,
+            vector_I_sun_lambda_mu,
+            vector_I_shade_lambda_mu,
+            vector_I_sun_lambda,
+            vector_I_shade_lambda,
+        ) = optical_params(State, i, j)
 
-    return I_up, I_down
+    return (
+        I_up,
+        I_down,
+        vector_I_sun_lambda_mu,
+        vector_I_shade_lambda_mu,
+        vector_I_sun_lambda,
+        vector_I_shade_lambda,
+    )
 
 
 # optical parameters:
@@ -300,7 +336,14 @@ def optical_params(State, i, j):
     if np.fabs(I_down) > 1e2:
         I_down = 0.0
 
-    return I_up, I_down
+    return (
+        I_up,
+        I_down,
+        vector_I_sun_lambda_mu,
+        vector_I_shade_lambda_mu,
+        vector_I_sun_lambda,
+        vector_I_shade_lambda,
+    )
 
 
 # From clm5: section 3.3
