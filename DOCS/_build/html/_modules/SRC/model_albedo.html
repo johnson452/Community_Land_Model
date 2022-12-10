@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SRC.model_albedo &mdash; Community Land Model 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> Community Land Model
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Community_Land_Model</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Community Land Model</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">SRC.model_albedo</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for SRC.model_albedo</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Albedo model:</span>
+<span class="sd">Inputs: State, Grid, App, i</span>
+<span class="sd">Outputs: None</span>
+
+<span class="sd">#Requires linking to the defintions:</span>
+<span class="sd">TABLES and METHODS subdirectories</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="n">script_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span>
+<span class="n">mymodule_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">script_dir</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="s2">&quot;TABLES&quot;</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mymodule_dir</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">table_3_1_plant_optics</span>
+
+<span class="n">mymodule_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">script_dir</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="s2">&quot;METHODS&quot;</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mymodule_dir</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">time_integration</span>
+
+
+<div class="viewcode-block" id="run_albedo_model"><a class="viewcode-back" href="../../SRC.html#SRC.model_albedo.run_albedo_model">[docs]</a><span class="k">def</span> <span class="nf">run_albedo_model</span><span class="p">(</span><span class="n">State</span><span class="p">,</span> <span class="n">Grid</span><span class="p">,</span> <span class="n">App</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running Alebedo Model</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Solar Radiation:</span>
+    <span class="n">solar</span><span class="p">(</span><span class="n">State</span><span class="p">,</span> <span class="n">Grid</span><span class="p">,</span> <span class="n">App</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+
+    <span class="c1"># Canopy Radiative Model ( depends on solar mu )</span>
+    <span class="n">canopy</span><span class="p">(</span><span class="n">State</span><span class="p">,</span> <span class="n">Grid</span><span class="p">,</span> <span class="n">App</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="canopy"><a class="viewcode-back" href="../../SRC.html#SRC.model_albedo.canopy">[docs]</a><span class="k">def</span> <span class="nf">canopy</span><span class="p">(</span><span class="n">State</span><span class="p">,</span> <span class="n">Grid</span><span class="p">,</span> <span class="n">App</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+
+    <span class="c1"># Run the canopy model for both ir and vis</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>  <span class="c1"># [vis/nir model]</span>
+        <span class="p">(</span>
+            <span class="n">I_up</span><span class="p">,</span>
+            <span class="n">I_down</span><span class="p">,</span>
+            <span class="n">vector_I_sun_lambda_mu</span><span class="p">,</span>
+            <span class="n">vector_I_shade_lambda_mu</span><span class="p">,</span>
+            <span class="n">vector_I_sun_lambda</span><span class="p">,</span>
+            <span class="n">vector_I_shade_lambda</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="n">canopy_model</span><span class="p">(</span><span class="n">State</span><span class="p">,</span> <span class="n">Grid</span><span class="p">,</span> <span class="n">App</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+
+        <span class="c1"># Save to vis or nir</span>
+        <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">State</span><span class="o">.</span><span class="n">I_up_vis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">I_up</span>
+            <span class="n">State</span><span class="o">.</span><span class="n">I_down_vis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">I_down</span>
+            <span class="n">State</span><span class="o">.</span><span class="n">I_sun_vis_mu</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">vector_I_sun_lambda_mu</span>
+            <span class="n">State</span><span class="o">.</span><span class="n">I_shade_vis_mu</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">vector_I_shade_lambda_mu</span>
+            <span class="n">State</span><span class="o">.</span><span class="n">I_sun_vis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">vector_I_sun_lambda</span>
+            <span class="n">State</span><span class="o">.</span><span class="n">I_shade_vis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">vector_I_shade_lambda</span>
+
+        <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">State</span><span class="o">.</span><span class="n">I_up_nir</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">I_up</span>
+            <span class="n">State</span><span class="o">.</span><span class="n">I_down_nir</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">I_down</span>
+            <span class="n">State</span><span class="o">.</span><span class="n">I_sun_nir_mu</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">vector_I_sun_lambda_mu</span>
+            <span class="n">State</span><span class="o">.</span><span class="n">I_shade_nir_mu</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">vector_I_shade_lambda_mu</span>
+            <span class="n">State</span><span class="o">.</span><span class="n">I_sun_nir</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">vector_I_sun_lambda</span>
+            <span class="n">State</span><span class="o">.</span><span class="n">I_shade_nir</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">vector_I_shade_lambda</span></div>
+
+
+<div class="viewcode-block" id="solar"><a class="viewcode-back" href="../../SRC.html#SRC.model_albedo.solar">[docs]</a><span class="k">def</span> <span class="nf">solar</span><span class="p">(</span><span class="n">State</span><span class="p">,</span> <span class="n">Grid</span><span class="p">,</span> <span class="n">App</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+    <span class="n">State</span><span class="o">.</span><span class="n">mu</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">solar_zenith_angle</span><span class="p">(</span><span class="n">State</span><span class="p">,</span> <span class="n">Grid</span><span class="p">,</span> <span class="n">App</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span></div>
+
+
+<span class="c1"># From clm5: section 3.1, canopy model/radiative fluxes</span>
+<div class="viewcode-block" id="canopy_model"><a class="viewcode-back" href="../../SRC.html#SRC.model_albedo.canopy_model">[docs]</a><span class="k">def</span> <span class="nf">canopy_model</span><span class="p">(</span><span class="n">State</span><span class="p">,</span> <span class="n">Grid</span><span class="p">,</span> <span class="n">App</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+
+    <span class="c1"># Calculate the bar(mu) average inverse diffuse optical depth per unit leaf and stem area</span>
+    <span class="c1"># Calculate the optical parameters</span>
+    <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="p">(</span>
+            <span class="n">I_up</span><span class="p">,</span>
+            <span class="n">I_down</span><span class="p">,</span>
+            <span class="n">vector_I_sun_lambda_mu</span><span class="p">,</span>
+            <span class="n">vector_I_shade_lambda_mu</span><span class="p">,</span>
+            <span class="n">vector_I_sun_lambda</span><span class="p">,</span>
+            <span class="n">vector_I_shade_lambda</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="n">optical_params</span><span class="p">(</span><span class="n">State</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="p">(</span>
+            <span class="n">I_up</span><span class="p">,</span>
+            <span class="n">I_down</span><span class="p">,</span>
+            <span class="n">vector_I_sun_lambda_mu</span><span class="p">,</span>
+            <span class="n">vector_I_shade_lambda_mu</span><span class="p">,</span>
+            <span class="n">vector_I_sun_lambda</span><span class="p">,</span>
+            <span class="n">vector_I_shade_lambda</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="n">optical_params</span><span class="p">(</span><span class="n">State</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">I_up</span><span class="p">,</span>
+        <span class="n">I_down</span><span class="p">,</span>
+        <span class="n">vector_I_sun_lambda_mu</span><span class="p">,</span>
+        <span class="n">vector_I_shade_lambda_mu</span><span class="p">,</span>
+        <span class="n">vector_I_sun_lambda</span><span class="p">,</span>
+        <span class="n">vector_I_shade_lambda</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+<span class="c1"># optical parameters:</span>
+<div class="viewcode-block" id="optical_params"><a class="viewcode-back" href="../../SRC.html#SRC.model_albedo.optical_params">[docs]</a><span class="k">def</span> <span class="nf">optical_params</span><span class="p">(</span><span class="n">State</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+
+    <span class="c1"># Grab the fcan_snow, mu</span>
+    <span class="n">fcan_snow</span> <span class="o">=</span> <span class="n">State</span><span class="o">.</span><span class="n">fcan_snow</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">mu</span> <span class="o">=</span> <span class="n">State</span><span class="o">.</span><span class="n">mu</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="c1"># Fraction of leaves and stems transmitances, L, S:</span>
+    <span class="c1"># approximate models:</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="n">State</span><span class="o">.</span><span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">State</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="c1"># Model for the up-down fluxes (1 is more accurate)</span>
+    <span class="n">model_up_down_flux</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># pft data</span>
+    <span class="n">Chi_L</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">tau</span> <span class="o">=</span> <span class="n">table_3_1_plant_optics</span><span class="o">.</span><span class="n">plant_props</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">pft</span><span class="p">)</span>
+
+    <span class="c1"># Determine wavelength:</span>
+    <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># Grab vis Parameters (Tables 3.1 / 3.2)</span>
+        <span class="n">alpha_lambda_leaf</span> <span class="o">=</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">alpha_lambda_stem</span> <span class="o">=</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">tau_lambda_leaf</span> <span class="o">=</span> <span class="n">tau</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">tau_lambda_stem</span> <span class="o">=</span> <span class="n">tau</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">omega_lambda_snow</span> <span class="o">=</span> <span class="mf">0.8</span>
+        <span class="n">beta_lambda_snow</span> <span class="o">=</span> <span class="mf">0.5</span>
+        <span class="n">beta_lambda_snow_0</span> <span class="o">=</span> <span class="mf">0.5</span>
+        <span class="c1"># Soil albedos and snow fraction (approximated - average no angle dep)</span>
+        <span class="c1"># Table 3.3</span>
+        <span class="n">a_soi_lambda_mu</span> <span class="o">=</span> <span class="mf">0.25</span>
+        <span class="n">a_soi_lambda</span> <span class="o">=</span> <span class="n">a_soi_lambda_mu</span>
+        <span class="n">a_sno_lambda_mu</span> <span class="o">=</span> <span class="mf">0.9</span>
+        <span class="n">a_sno_lambda</span> <span class="o">=</span> <span class="n">a_sno_lambda_mu</span>
+        <span class="n">fsno</span> <span class="o">=</span> <span class="n">State</span><span class="o">.</span><span class="n">fsno</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># Grab nir Parameters (Tables 3.1 / 3.2)</span>
+        <span class="n">alpha_lambda_leaf</span> <span class="o">=</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">alpha_lambda_stem</span> <span class="o">=</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">tau_lambda_leaf</span> <span class="o">=</span> <span class="n">tau</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">tau_lambda_stem</span> <span class="o">=</span> <span class="n">tau</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">omega_lambda_snow</span> <span class="o">=</span> <span class="mf">0.4</span>
+        <span class="n">beta_lambda_snow</span> <span class="o">=</span> <span class="mf">0.5</span>
+        <span class="n">beta_lambda_snow_0</span> <span class="o">=</span> <span class="mf">0.5</span>
+        <span class="c1"># Soil albedos and snow fraction (approximated - average no angle dep)</span>
+        <span class="c1"># Table 3.3</span>
+        <span class="n">a_soi_lambda_mu</span> <span class="o">=</span> <span class="mf">0.5</span>
+        <span class="n">a_soi_lambda</span> <span class="o">=</span> <span class="n">a_soi_lambda_mu</span>
+        <span class="n">a_sno_lambda_mu</span> <span class="o">=</span> <span class="mf">0.5</span>
+        <span class="n">a_sno_lambda</span> <span class="o">=</span> <span class="n">a_sno_lambda_mu</span>
+        <span class="n">fsno</span> <span class="o">=</span> <span class="n">State</span><span class="o">.</span><span class="n">fsno</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="c1"># Only valid for -0.4 &lt; Xl &lt; 0.6, but we assume validity to -0.5</span>
+    <span class="n">phi1</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">-</span> <span class="mf">0.633</span> <span class="o">*</span> <span class="n">Chi_L</span> <span class="o">-</span> <span class="mf">0.33</span> <span class="o">*</span> <span class="n">Chi_L</span> <span class="o">*</span> <span class="n">Chi_L</span>
+    <span class="n">phi2</span> <span class="o">=</span> <span class="mf">0.877</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">phi1</span><span class="p">)</span>
+
+    <span class="c1"># Calculate Eq 3.3 relative projected area of leaves and stems in the direction cos−1 𝜇</span>
+    <span class="n">G_mu</span> <span class="o">=</span> <span class="n">phi1</span> <span class="o">+</span> <span class="n">phi2</span> <span class="o">*</span> <span class="n">mu</span>
+
+    <span class="c1"># Calculate the mu_bar_val verage inverse diffuse optical depth per unit leaf and stem area</span>
+    <span class="n">mu_bar_val</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">phi2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">phi1</span> <span class="o">/</span> <span class="n">phi2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">((</span><span class="n">phi1</span> <span class="o">+</span> <span class="n">phi2</span><span class="p">)</span> <span class="o">/</span> <span class="n">phi1</span><span class="p">)))</span>
+
+    <span class="c1"># Caluculate weighted leaf and stem contributions</span>
+    <span class="n">w_leaf</span> <span class="o">=</span> <span class="n">L</span> <span class="o">/</span> <span class="p">(</span><span class="n">L</span> <span class="o">+</span> <span class="n">S</span><span class="p">)</span>
+    <span class="n">w_stem</span> <span class="o">=</span> <span class="n">S</span> <span class="o">/</span> <span class="p">(</span><span class="n">L</span> <span class="o">+</span> <span class="n">S</span><span class="p">)</span>
+
+    <span class="c1"># Calculate [vis nir - wavelength] properties: 3.11, 3.12</span>
+    <span class="c1"># (alpha, tau -&gt; weighted avgs.)</span>
+    <span class="n">alpha_lambda</span> <span class="o">=</span> <span class="n">alpha_lambda_leaf</span> <span class="o">*</span> <span class="n">w_leaf</span> <span class="o">+</span> <span class="n">alpha_lambda_stem</span> <span class="o">*</span> <span class="n">w_stem</span>
+    <span class="n">tau_lambda</span> <span class="o">=</span> <span class="n">tau_lambda_leaf</span> <span class="o">*</span> <span class="n">w_leaf</span> <span class="o">+</span> <span class="n">tau_lambda_stem</span> <span class="o">*</span> <span class="n">w_stem</span>
+    <span class="n">omega_lambda_veg</span> <span class="o">=</span> <span class="n">alpha_lambda</span> <span class="o">+</span> <span class="n">tau_lambda</span>
+
+    <span class="c1"># optical parameters: 3.5</span>
+    <span class="n">omega_lambda</span> <span class="o">=</span> <span class="n">omega_lambda_veg</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">fcan_snow</span><span class="p">)</span> <span class="o">+</span> <span class="n">omega_lambda_snow</span> <span class="o">*</span> <span class="n">fcan_snow</span>
+
+    <span class="c1"># Calculate the mean leaf inclination angle</span>
+    <span class="n">cos_theta_bar</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">Chi_L</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
+    <span class="c1"># Calclate the upscatter for diffuse radiation</span>
+    <span class="n">omega_lambda_veg_times_beta_lambda_veg</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="n">alpha_lambda</span>
+        <span class="o">+</span> <span class="n">tau_lambda</span>
+        <span class="o">+</span> <span class="p">(</span><span class="n">alpha_lambda</span> <span class="o">-</span> <span class="n">tau_lambda</span><span class="p">)</span> <span class="o">*</span> <span class="n">cos_theta_bar</span> <span class="o">*</span> <span class="n">cos_theta_bar</span>
+    <span class="p">)</span>
+
+    <span class="c1"># single scattering albedo (3.16)</span>
+    <span class="n">a_s_mu_lambda</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="n">omega_lambda_veg</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="o">*</span> <span class="p">(</span><span class="n">G_mu</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">mu</span> <span class="o">*</span> <span class="n">phi2</span> <span class="o">+</span> <span class="n">G_mu</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">))</span>
+        <span class="o">*</span> <span class="p">(</span>
+            <span class="mi">1</span>
+            <span class="o">-</span> <span class="p">(</span><span class="n">mu</span> <span class="o">*</span> <span class="n">phi1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">mu</span> <span class="o">*</span> <span class="n">phi2</span> <span class="o">+</span> <span class="n">G_mu</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">))</span>
+            <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">((</span><span class="n">mu</span> <span class="o">*</span> <span class="n">phi1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">mu</span> <span class="o">*</span> <span class="n">phi2</span> <span class="o">+</span> <span class="n">G_mu</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">mu</span> <span class="o">*</span> <span class="n">phi1</span><span class="p">)))</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># K: optical depth of direct beam per unit leaf and stem area</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="n">G_mu</span> <span class="o">/</span> <span class="n">mu</span>
+
+    <span class="c1"># Calculate upscatter for direct beam radiation (3.15)</span>
+    <span class="n">omega_lambda_veg_times_beta_lambda_veg_0</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">K</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">K</span><span class="p">)</span>
+    <span class="p">)</span> <span class="o">*</span> <span class="n">a_s_mu_lambda</span>
+
+    <span class="c1"># optical parameters: 3.5 (3.6 - 3.7) &amp; ()3.8 - 3.10)</span>
+    <span class="n">omega_lambda_beta_lambda</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">omega_lambda_veg_times_beta_lambda_veg</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">fcan_snow</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">omega_lambda_snow</span> <span class="o">*</span> <span class="n">beta_lambda_snow</span> <span class="o">*</span> <span class="n">fcan_snow</span>
+    <span class="p">)</span>
+    <span class="n">omega_lambda_beta_lambda_0</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">omega_lambda_veg_times_beta_lambda_veg_0</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">fcan_snow</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">omega_lambda_snow</span> <span class="o">*</span> <span class="n">beta_lambda_snow_0</span> <span class="o">*</span> <span class="n">fcan_snow</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Caluculate (Ground albedos Section 3.2)</span>
+    <span class="n">a_g_lambda_mu</span> <span class="o">=</span> <span class="n">a_soi_lambda_mu</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">fsno</span><span class="p">)</span> <span class="o">+</span> <span class="n">a_sno_lambda_mu</span> <span class="o">*</span> <span class="n">fsno</span>
+    <span class="n">a_g_lambda</span> <span class="o">=</span> <span class="n">a_soi_lambda</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">fsno</span><span class="p">)</span> <span class="o">+</span> <span class="n">a_sno_lambda</span> <span class="o">*</span> <span class="n">fsno</span>
+
+    <span class="c1"># Calculate various components, to simplify math: (3.31-3.57)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">omega_lambda_beta_lambda</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">omega_lambda</span> <span class="o">+</span> <span class="n">c</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">K</span> <span class="o">*</span> <span class="n">omega_lambda_beta_lambda_0</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">omega_lambda</span> <span class="o">*</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">K</span> <span class="o">-</span> <span class="n">d</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">b</span> <span class="o">*</span> <span class="n">b</span> <span class="o">-</span> <span class="n">c</span> <span class="o">*</span> <span class="n">c</span><span class="p">)</span> <span class="o">/</span> <span class="n">mu_bar_val</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">K</span> <span class="o">*</span> <span class="n">K</span> <span class="o">+</span> <span class="n">c</span> <span class="o">*</span> <span class="n">c</span> <span class="o">-</span> <span class="n">b</span> <span class="o">*</span> <span class="n">b</span>
+    <span class="n">u1_mu</span> <span class="o">=</span> <span class="n">b</span> <span class="o">-</span> <span class="n">c</span> <span class="o">/</span> <span class="n">a_g_lambda_mu</span>
+    <span class="n">u2_mu</span> <span class="o">=</span> <span class="n">b</span> <span class="o">-</span> <span class="n">c</span> <span class="o">*</span> <span class="n">a_g_lambda_mu</span>
+    <span class="n">u3_mu</span> <span class="o">=</span> <span class="n">f</span> <span class="o">+</span> <span class="n">c</span> <span class="o">*</span> <span class="n">a_g_lambda_mu</span>
+    <span class="n">u1</span> <span class="o">=</span> <span class="n">b</span> <span class="o">-</span> <span class="n">c</span> <span class="o">/</span> <span class="n">a_g_lambda</span>
+    <span class="n">u2</span> <span class="o">=</span> <span class="n">b</span> <span class="o">-</span> <span class="n">c</span> <span class="o">*</span> <span class="n">a_g_lambda</span>
+    <span class="n">u3</span> <span class="o">=</span> <span class="n">f</span> <span class="o">+</span> <span class="n">c</span> <span class="o">*</span> <span class="n">a_g_lambda</span>
+
+    <span class="c1"># suppress warnings for large values</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+    <span class="n">s1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">h</span> <span class="o">*</span> <span class="p">(</span><span class="n">L</span> <span class="o">+</span> <span class="n">S</span><span class="p">),</span> <span class="mi">40</span><span class="p">))</span>
+    <span class="n">s2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">K</span> <span class="o">*</span> <span class="p">(</span><span class="n">L</span> <span class="o">+</span> <span class="n">S</span><span class="p">),</span> <span class="mi">40</span><span class="p">))</span>
+    <span class="n">p1</span> <span class="o">=</span> <span class="n">b</span> <span class="o">+</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">h</span>
+    <span class="n">p2</span> <span class="o">=</span> <span class="n">b</span> <span class="o">-</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">h</span>
+    <span class="n">p3</span> <span class="o">=</span> <span class="n">b</span> <span class="o">+</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">K</span>
+    <span class="n">p4</span> <span class="o">=</span> <span class="n">b</span> <span class="o">-</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">K</span>
+    <span class="n">d1_mu</span> <span class="o">=</span> <span class="n">p1</span> <span class="o">*</span> <span class="p">(</span><span class="n">u1_mu</span> <span class="o">-</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span> <span class="o">/</span> <span class="n">s1</span> <span class="o">-</span> <span class="n">p2</span> <span class="o">*</span> <span class="p">(</span><span class="n">u1_mu</span> <span class="o">+</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span> <span class="o">*</span> <span class="n">s1</span>
+    <span class="n">d2_mu</span> <span class="o">=</span> <span class="p">(</span><span class="n">u2_mu</span> <span class="o">+</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span> <span class="o">/</span> <span class="n">s1</span> <span class="o">-</span> <span class="p">(</span><span class="n">u2_mu</span> <span class="o">-</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span> <span class="o">*</span> <span class="n">s1</span>
+    <span class="n">d1</span> <span class="o">=</span> <span class="n">p1</span> <span class="o">*</span> <span class="p">(</span><span class="n">u1</span> <span class="o">-</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span> <span class="o">/</span> <span class="n">s1</span> <span class="o">-</span> <span class="n">p2</span> <span class="o">*</span> <span class="p">(</span><span class="n">u1</span> <span class="o">+</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span> <span class="o">*</span> <span class="n">s1</span>
+    <span class="n">d2</span> <span class="o">=</span> <span class="p">(</span><span class="n">u2</span> <span class="o">+</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span> <span class="o">/</span> <span class="n">s1</span> <span class="o">-</span> <span class="p">(</span><span class="n">u2</span> <span class="o">-</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span> <span class="o">*</span> <span class="n">s1</span>
+
+    <span class="c1"># use mu quantities</span>
+    <span class="n">h1</span> <span class="o">=</span> <span class="o">-</span><span class="n">d</span> <span class="o">*</span> <span class="n">p4</span> <span class="o">-</span> <span class="n">c</span> <span class="o">*</span> <span class="n">f</span>
+    <span class="n">h2</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">d1_mu</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="p">(</span><span class="n">h1</span> <span class="o">/</span> <span class="n">sigma</span><span class="p">)</span> <span class="o">*</span> <span class="n">p3</span><span class="p">)</span> <span class="o">*</span> <span class="p">((</span><span class="n">u1_mu</span> <span class="o">-</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span> <span class="o">/</span> <span class="n">s1</span><span class="p">)</span>
+        <span class="o">-</span> <span class="n">p2</span> <span class="o">*</span> <span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="n">c</span> <span class="o">-</span> <span class="p">(</span><span class="n">h1</span> <span class="o">/</span> <span class="n">sigma</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">u1_mu</span> <span class="o">+</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">K</span><span class="p">))</span> <span class="o">*</span> <span class="n">s2</span>
+    <span class="p">)</span>
+    <span class="n">h3</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">d1_mu</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="p">(</span><span class="n">h1</span> <span class="o">/</span> <span class="n">sigma</span><span class="p">)</span> <span class="o">*</span> <span class="n">p3</span><span class="p">)</span> <span class="o">*</span> <span class="p">((</span><span class="n">u1_mu</span> <span class="o">+</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span> <span class="o">*</span> <span class="n">s1</span><span class="p">)</span>
+        <span class="o">-</span> <span class="n">p1</span> <span class="o">*</span> <span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="n">c</span> <span class="o">-</span> <span class="p">(</span><span class="n">h1</span> <span class="o">/</span> <span class="n">sigma</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">u1_mu</span> <span class="o">+</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">K</span><span class="p">))</span> <span class="o">*</span> <span class="n">s2</span>
+    <span class="p">)</span>
+    <span class="n">h4</span> <span class="o">=</span> <span class="o">-</span><span class="n">f</span> <span class="o">*</span> <span class="n">p3</span> <span class="o">-</span> <span class="n">c</span> <span class="o">*</span> <span class="n">d</span>
+    <span class="n">h5</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">d2_mu</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="p">(</span><span class="n">h4</span> <span class="o">*</span> <span class="p">(</span><span class="n">u2_mu</span> <span class="o">+</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">sigma</span> <span class="o">*</span> <span class="n">s1</span><span class="p">))</span>
+        <span class="o">+</span> <span class="p">(</span><span class="n">u3_mu</span> <span class="o">-</span> <span class="p">(</span><span class="n">h4</span> <span class="o">/</span> <span class="n">sigma</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">u2_mu</span> <span class="o">-</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">K</span><span class="p">))</span> <span class="o">*</span> <span class="n">s2</span>
+    <span class="p">)</span>
+    <span class="n">h6</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">d2_mu</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="p">(</span><span class="n">s1</span> <span class="o">*</span> <span class="n">h4</span> <span class="o">*</span> <span class="p">(</span><span class="n">u2_mu</span> <span class="o">-</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">sigma</span><span class="p">))</span>
+        <span class="o">+</span> <span class="p">(</span><span class="n">u3_mu</span> <span class="o">-</span> <span class="p">(</span><span class="n">h4</span> <span class="o">/</span> <span class="n">sigma</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">u2_mu</span> <span class="o">-</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">K</span><span class="p">))</span> <span class="o">*</span> <span class="n">s2</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Don&#39;t use mu quantities</span>
+    <span class="n">h7</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="p">(</span><span class="n">u1</span> <span class="o">-</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">d1</span> <span class="o">*</span> <span class="n">s1</span><span class="p">)</span>
+    <span class="n">h8</span> <span class="o">=</span> <span class="o">-</span><span class="n">s1</span> <span class="o">*</span> <span class="n">c</span> <span class="o">*</span> <span class="p">(</span><span class="n">u1</span> <span class="o">+</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">d1</span><span class="p">)</span>
+    <span class="n">h9</span> <span class="o">=</span> <span class="p">(</span><span class="n">u2</span> <span class="o">+</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">d2</span> <span class="o">*</span> <span class="n">s1</span><span class="p">)</span>
+    <span class="n">h10</span> <span class="o">=</span> <span class="o">-</span><span class="n">s1</span> <span class="o">*</span> <span class="p">(</span><span class="n">u2</span> <span class="o">-</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">d2</span><span class="p">)</span>
+
+    <span class="n">a1_mu</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="n">h1</span> <span class="o">/</span> <span class="n">sigma</span><span class="p">)</span> <span class="o">*</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s2</span> <span class="o">*</span> <span class="n">s2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">K</span><span class="p">))</span>
+        <span class="o">+</span> <span class="n">h2</span> <span class="o">*</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s2</span> <span class="o">*</span> <span class="n">s1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">K</span> <span class="o">+</span> <span class="n">h</span><span class="p">))</span>
+        <span class="o">+</span> <span class="n">h3</span> <span class="o">*</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s2</span> <span class="o">/</span> <span class="n">s1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">K</span> <span class="o">-</span> <span class="n">h</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">a2_mu</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="n">h4</span> <span class="o">/</span> <span class="n">sigma</span><span class="p">)</span> <span class="o">*</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s2</span> <span class="o">*</span> <span class="n">s2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">K</span><span class="p">))</span>
+        <span class="o">+</span> <span class="n">h5</span> <span class="o">*</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s2</span> <span class="o">*</span> <span class="n">s1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">K</span> <span class="o">+</span> <span class="n">h</span><span class="p">))</span>
+        <span class="o">+</span> <span class="n">h6</span> <span class="o">*</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s2</span> <span class="o">/</span> <span class="n">s1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">K</span> <span class="o">-</span> <span class="n">h</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">a1</span> <span class="o">=</span> <span class="n">h7</span> <span class="o">*</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s2</span> <span class="o">*</span> <span class="n">s1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">K</span> <span class="o">+</span> <span class="n">h</span><span class="p">))</span> <span class="o">+</span> <span class="n">h8</span> <span class="o">*</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s2</span> <span class="o">/</span> <span class="n">s1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">K</span> <span class="o">-</span> <span class="n">h</span><span class="p">))</span>
+    <span class="n">a2</span> <span class="o">=</span> <span class="n">h9</span> <span class="o">*</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s2</span> <span class="o">*</span> <span class="n">s1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">K</span> <span class="o">+</span> <span class="n">h</span><span class="p">))</span> <span class="o">+</span> <span class="n">h10</span> <span class="o">*</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s2</span> <span class="o">/</span> <span class="n">s1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">K</span> <span class="o">-</span> <span class="n">h</span><span class="p">))</span>
+
+    <span class="c1"># Calculate the surface albedos ( 3.17- 3.20)</span>
+    <span class="c1"># (upward diffuse fluxes per unit incident direct beam and diffuse flux)</span>
+    <span class="n">I_up_lambda_mu</span> <span class="o">=</span> <span class="n">h1</span> <span class="o">/</span> <span class="n">sigma</span> <span class="o">+</span> <span class="n">h2</span> <span class="o">+</span> <span class="n">h3</span>
+    <span class="n">I_up_lambda</span> <span class="o">=</span> <span class="n">h7</span> <span class="o">+</span> <span class="n">h8</span>
+
+    <span class="c1"># (downward diffuse fluxes per unit incident direct beam and diffuse radiation)</span>
+    <span class="n">I_down_lambda_mu</span> <span class="o">=</span> <span class="p">(</span><span class="n">h4</span> <span class="o">/</span> <span class="n">sigma</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">K</span> <span class="o">*</span> <span class="p">(</span><span class="n">L</span> <span class="o">+</span> <span class="n">S</span><span class="p">))</span> <span class="o">+</span> <span class="n">h5</span> <span class="o">*</span> <span class="n">s1</span> <span class="o">+</span> <span class="n">h6</span> <span class="o">/</span> <span class="n">s1</span>
+    <span class="n">I_down_lambda</span> <span class="o">=</span> <span class="n">h9</span> <span class="o">*</span> <span class="n">s1</span> <span class="o">+</span> <span class="n">h10</span> <span class="o">/</span> <span class="n">s1</span>
+
+    <span class="c1"># Calculate same per incident flux (3.21-3.22 )</span>
+    <span class="c1"># (direct beam and diffuse fluxes absorbed by the vegetation, per unit incident flux)</span>
+    <span class="n">vector_I_lambda_mu</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="mi">1</span>
+        <span class="o">-</span> <span class="n">I_up_lambda_mu</span>
+        <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">a_g_lambda</span><span class="p">)</span> <span class="o">*</span> <span class="n">I_down_lambda_mu</span>
+        <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">a_g_lambda_mu</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">K</span> <span class="o">*</span> <span class="p">(</span><span class="n">L</span> <span class="o">+</span> <span class="n">S</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">vector_I_lambda</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">I_up_lambda</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">a_g_lambda</span><span class="p">)</span> <span class="o">*</span> <span class="n">I_down_lambda</span>
+
+    <span class="c1"># The absorption of direct beam radiation by sunlit leaves ( 3.23 )</span>
+    <span class="n">vector_I_sun_lambda_mu</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">omega_lambda</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="mi">1</span> <span class="o">-</span> <span class="n">s2</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">mu_bar_val</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">a1_mu</span> <span class="o">+</span> <span class="n">a2_mu</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="c1"># For shaded leaves is (3.24)</span>
+    <span class="n">vector_I_shade_lambda_mu</span> <span class="o">=</span> <span class="n">vector_I_lambda_mu</span> <span class="o">-</span> <span class="n">vector_I_sun_lambda_mu</span>
+
+    <span class="c1"># For diffuse radiation, the absorbed radiation for sunlit leaves is (3.27)</span>
+    <span class="n">vector_I_sun_lambda</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">omega_lambda</span><span class="p">)</span> <span class="o">*</span> <span class="p">((</span><span class="mi">1</span> <span class="o">/</span> <span class="n">mu_bar_val</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">a1</span> <span class="o">+</span> <span class="n">a2</span><span class="p">))</span>
+    <span class="c1"># For shaded leaves ( 3.28 )</span>
+    <span class="n">vector_I_shade_lambda</span> <span class="o">=</span> <span class="n">vector_I_lambda</span> <span class="o">-</span> <span class="n">vector_I_sun_lambda</span>
+
+    <span class="c1"># Calculate the canopy fluxes with clm5 eq, 3.1/3.2</span>
+    <span class="c1"># dI/d(L+S) -&gt; fraction transmitted, 1 layer assumption:</span>
+    <span class="c1"># dI_up/d(L+S) = (L+S)*I_up</span>
+    <span class="n">omega</span> <span class="o">=</span> <span class="n">omega_lambda</span>
+    <span class="n">Beta</span> <span class="o">=</span> <span class="n">omega_lambda_beta_lambda</span> <span class="o">/</span> <span class="n">omega</span>
+    <span class="n">Beta_0</span> <span class="o">=</span> <span class="n">omega_lambda_beta_lambda_0</span> <span class="o">/</span> <span class="n">omega</span>
+
+    <span class="c1"># Model 0: (dI/d(L+S) -&gt; -I)</span>
+    <span class="k">if</span> <span class="n">model_up_down_flux</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">z_minus</span> <span class="o">=</span> <span class="o">-</span><span class="n">mu_bar_val</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">Beta</span><span class="p">)</span> <span class="o">*</span> <span class="n">omega</span><span class="p">)</span>
+        <span class="n">z_plus</span> <span class="o">=</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">Beta</span><span class="p">)</span> <span class="o">*</span> <span class="n">omega</span><span class="p">)</span>
+        <span class="n">z1</span> <span class="o">=</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">K</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">K</span> <span class="o">*</span> <span class="p">(</span><span class="n">L</span> <span class="o">+</span> <span class="n">S</span><span class="p">))</span>
+        <span class="n">I_up</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">Beta</span> <span class="o">*</span> <span class="n">Beta</span> <span class="o">/</span> <span class="p">(</span><span class="n">z_minus</span> <span class="o">*</span> <span class="n">z_plus</span><span class="p">)))</span> <span class="o">*</span> <span class="p">(</span>
+            <span class="n">omega</span> <span class="o">*</span> <span class="n">Beta</span> <span class="o">*</span> <span class="n">z1</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">Beta_0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">z_minus</span> <span class="o">*</span> <span class="n">z_plus</span><span class="p">)</span>
+            <span class="o">+</span> <span class="n">z1</span> <span class="o">*</span> <span class="n">Beta_0</span> <span class="o">/</span> <span class="n">z_minus</span>
+        <span class="p">)</span>
+        <span class="n">I_down</span> <span class="o">=</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">Beta</span> <span class="o">*</span> <span class="n">I_up</span> <span class="o">/</span> <span class="n">z_plus</span> <span class="o">+</span> <span class="n">z1</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">Beta_0</span><span class="p">)</span> <span class="o">/</span> <span class="n">z_plus</span>
+
+    <span class="c1"># Model 1: (dI/d(L+S) -&gt; -I_0 = -1)</span>
+    <span class="k">if</span> <span class="n">model_up_down_flux</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">neg</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">z0</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">Beta</span><span class="p">)</span> <span class="o">*</span> <span class="n">omega</span>
+        <span class="n">z1</span> <span class="o">=</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">mu_bar_val</span> <span class="o">*</span> <span class="n">K</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">K</span> <span class="o">*</span> <span class="p">(</span><span class="n">L</span> <span class="o">+</span> <span class="n">S</span><span class="p">))</span>
+        <span class="n">I_down</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">Beta</span> <span class="o">*</span> <span class="n">Beta</span> <span class="o">/</span> <span class="p">(</span><span class="n">z0</span> <span class="o">*</span> <span class="n">z0</span><span class="p">)))</span> <span class="o">*</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">Beta</span> <span class="o">/</span> <span class="n">z0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">z1</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">Beta_0</span><span class="p">)</span> <span class="o">/</span> <span class="n">z0</span> <span class="o">-</span> <span class="n">mu_bar_val</span> <span class="o">/</span> <span class="n">z0</span><span class="p">)</span>
+            <span class="o">+</span> <span class="n">z1</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">Beta_0</span><span class="p">)</span> <span class="o">/</span> <span class="n">z0</span>
+            <span class="o">+</span> <span class="n">mu_bar_val</span> <span class="o">/</span> <span class="n">z0</span>
+        <span class="p">)</span>
+        <span class="c1"># If it&#39;s night, no incoming fluxs</span>
+        <span class="k">if</span> <span class="n">mu</span> <span class="o">&lt;=</span> <span class="mf">0.00</span><span class="p">:</span>
+            <span class="n">I_down</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">I_up</span> <span class="o">=</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">Beta</span> <span class="o">*</span> <span class="n">I_down</span> <span class="o">/</span> <span class="n">z0</span> <span class="o">+</span> <span class="n">z1</span> <span class="o">*</span> <span class="p">(</span><span class="n">Beta_0</span><span class="p">)</span> <span class="o">/</span> <span class="n">z0</span> <span class="o">-</span> <span class="n">mu_bar_val</span> <span class="o">/</span> <span class="n">z0</span>
+
+    <span class="c1"># Upgrade to Rk4 with better canopy model!!</span>
+
+    <span class="c1"># If it&#39;s night, no incoming fluxs</span>
+    <span class="k">if</span> <span class="n">mu</span> <span class="o">&lt;=</span> <span class="mf">0.00</span><span class="p">:</span>
+        <span class="n">vector_I_sun_lambda_mu</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">vector_I_shade_lambda_mu</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">vector_I_sun_lambda</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">vector_I_shade_lambda</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="c1"># If close to sunset for fixed output (corrected by atompshere model anyway)</span>
+    <span class="n">cuttoff</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">I_up</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">cuttoff</span><span class="p">:</span>
+        <span class="n">I_up</span> <span class="o">=</span> <span class="n">I_up</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">I_up</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">cuttoff</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">I_down</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">cuttoff</span><span class="p">:</span>
+        <span class="n">I_down</span> <span class="o">=</span> <span class="n">I_down</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">I_down</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">cuttoff</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">vector_I_sun_lambda_mu</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">cuttoff</span><span class="p">:</span>
+        <span class="n">vector_I_sun_lambda_mu</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">vector_I_sun_lambda_mu</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">vector_I_sun_lambda_mu</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">cuttoff</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">vector_I_shade_lambda_mu</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">cuttoff</span><span class="p">:</span>
+        <span class="n">vector_I_shade_lambda_mu</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">vector_I_shade_lambda_mu</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">vector_I_shade_lambda_mu</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">cuttoff</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">vector_I_sun_lambda</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">cuttoff</span><span class="p">:</span>
+        <span class="n">vector_I_sun_lambda</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">vector_I_sun_lambda</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">vector_I_sun_lambda</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">cuttoff</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">vector_I_shade_lambda</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">cuttoff</span><span class="p">:</span>
+        <span class="n">vector_I_shade_lambda</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">vector_I_shade_lambda</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">vector_I_shade_lambda</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">cuttoff</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">I_up</span><span class="p">,</span>
+        <span class="n">I_down</span><span class="p">,</span>
+        <span class="n">vector_I_sun_lambda_mu</span><span class="p">,</span>
+        <span class="n">vector_I_shade_lambda_mu</span><span class="p">,</span>
+        <span class="n">vector_I_sun_lambda</span><span class="p">,</span>
+        <span class="n">vector_I_shade_lambda</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+<span class="c1"># From clm5: section 3.3</span>
+<div class="viewcode-block" id="solar_zenith_angle"><a class="viewcode-back" href="../../SRC.html#SRC.model_albedo.solar_zenith_angle">[docs]</a><span class="k">def</span> <span class="nf">solar_zenith_angle</span><span class="p">(</span><span class="n">State</span><span class="p">,</span> <span class="n">Grid</span><span class="p">,</span> <span class="n">App</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">Grid</span><span class="o">.</span><span class="n">time</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>  <span class="c1"># day of the year</span>
+    <span class="n">phi</span> <span class="o">=</span> <span class="n">State</span><span class="o">.</span><span class="n">latitude</span>
+    <span class="n">eps</span> <span class="o">=</span> <span class="mf">23.44</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">360</span><span class="p">)</span>  <span class="c1"># Earth&#39;s obliquity (Approximately constant)</span>
+    <span class="n">lbda</span> <span class="o">=</span> <span class="n">lambda_val</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>  <span class="c1"># true longitude of the Earth</span>
+    <span class="c1"># Eq 3.78 for solar declination</span>
+    <span class="n">delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">eps</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lbda</span><span class="p">))</span>
+    <span class="n">theta</span> <span class="o">=</span> <span class="n">State</span><span class="o">.</span><span class="n">longitude</span>
+    <span class="c1"># Eq 3.77 for solar hour angle</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">d</span> <span class="o">+</span> <span class="n">theta</span>
+
+    <span class="c1"># Eq 3.76 for solar zenith angle, mu</span>
+    <span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mu</span></div>
+
+
+<span class="c1"># true longitude of the Earth</span>
+<div class="viewcode-block" id="lambda_val"><a class="viewcode-back" href="../../SRC.html#SRC.model_albedo.lambda_val">[docs]</a><span class="k">def</span> <span class="nf">lambda_val</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="mf">0.01671</span>  <span class="c1"># Earth&#39;s Eccetricity</span>
+    <span class="n">dve</span> <span class="o">=</span> <span class="mf">80.5</span>  <span class="c1"># Vernal Equinox</span>
+    <span class="n">Beta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">e</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">omega_tilde</span> <span class="o">=</span> <span class="mf">3.392506</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">360</span><span class="p">)</span>
+    <span class="n">lbda_m0</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">e</span> <span class="o">+</span> <span class="mf">0.125</span> <span class="o">*</span> <span class="p">(</span><span class="n">e</span><span class="o">**</span><span class="mi">3</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">Beta</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">omega_tilde</span><span class="p">)</span>
+        <span class="o">-</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="p">(</span><span class="n">e</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">+</span> <span class="n">Beta</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">omega_tilde</span><span class="p">)</span>
+        <span class="o">+</span> <span class="mf">0.125</span> <span class="o">*</span> <span class="p">(</span><span class="n">e</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="p">((</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="n">Beta</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">omega_tilde</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">lbda_m</span> <span class="o">=</span> <span class="n">lbda_m0</span> <span class="o">+</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">365.25</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="n">dve</span><span class="p">)</span>
+    <span class="n">lbda</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">lbda_m</span>
+        <span class="o">+</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">e</span> <span class="o">-</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="p">(</span><span class="n">e</span><span class="o">**</span><span class="mi">3</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lbda_m</span> <span class="o">-</span> <span class="n">omega_tilde</span><span class="p">)</span>
+        <span class="o">+</span> <span class="p">(</span><span class="mi">5</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">e</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">lbda_m</span> <span class="o">-</span> <span class="n">omega_tilde</span><span class="p">))</span>
+        <span class="o">+</span> <span class="p">(</span><span class="mi">13</span> <span class="o">/</span> <span class="mi">12</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">e</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="p">(</span><span class="n">lbda_m</span> <span class="o">-</span> <span class="n">omega_tilde</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">lbda</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Grant Johnson, Kevin Yi, Henry Stone.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
