@@ -41,12 +41,20 @@ def diagnostics():
     str_val_y = "mu"
     plot_general(X, Y, str_val_x, str_val_y)
 
-    Y = State.I_up
-    str_val_y = "I_up"
+    Y = State.I_up_vis
+    str_val_y = "I_up_vis"
     plot_general(X, Y, str_val_x, str_val_y)
 
-    Y = State.I_down
-    str_val_y = "I_down"
+    Y = State.I_down_vis
+    str_val_y = "I_down_vis"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.I_up_nir
+    str_val_y = "I_up_nir"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.I_down_nir
+    str_val_y = "I_down_nir"
     plot_general(X, Y, str_val_x, str_val_y)
 
     Y = State.fcan_snow

@@ -25,10 +25,8 @@ class clm_parameters:
         self.name = "Parameter_Data"
 
         # General parameters:
-        self.NZ: int = 10
-        self.dz: float = 0.1
-        self.time_start: float = 0  # 150.5
-        self.time_end: float = 365  # 151.5
+        self.time_start: float = 0
+        self.time_end: float = 365
         self.location: str = "Princeton"
 
         # Models to include:
