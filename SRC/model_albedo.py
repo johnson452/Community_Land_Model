@@ -114,6 +114,9 @@ def optical_params(State, i, j):
     L = State.L[i]
     S = State.S[i]
 
+    # Model for the up-down fluxes (1 is more accurate)
+    model_up_down_flux = 1
+
     # pft data
     Chi_L, alpha, tau = table_3_1_plant_optics.plant_props(State.pft)
 
@@ -321,20 +324,64 @@ def optical_params(State, i, j):
     omega = omega_lambda
     Beta = omega_lambda_beta_lambda / omega
     Beta_0 = omega_lambda_beta_lambda_0 / omega
-    z_plus = mu_bar_val * (-1) + (1 - (1 - Beta) * omega)
-    z_minus = -mu_bar_val * (-1) + (1 - (1 - Beta) * omega)
-    z1 = omega * mu_bar_val * K * np.exp(-K * (L + S))
-    I_up = (1 / (1 - omega * omega * Beta * Beta / (z_minus * z_plus))) * (
-        omega * Beta * z1 * (1 - Beta_0) / (z_minus * z_plus) + z1 * Beta_0 / z_minus
-    )
-    I_down = omega * Beta * I_up / z_plus + z1 * (1 - Beta_0) / z_plus
+
+    # Model 0: (dI/d(L+S) -> -I)
+    if model_up_down_flux == 0:
+        z_minus = -mu_bar_val * (-1) + (1 - (1 - Beta) * omega)
+        z_plus = mu_bar_val * (-1) + (1 - (1 - Beta) * omega)
+        z1 = omega * mu_bar_val * K * np.exp(-K * (L + S))
+        I_up = (1 / (1 - omega * omega * Beta * Beta / (z_minus * z_plus))) * (
+            omega * Beta * z1 * (1 - Beta_0) / (z_minus * z_plus)
+            + z1 * Beta_0 / z_minus
+        )
+        I_down = omega * Beta * I_up / z_plus + z1 * (1 - Beta_0) / z_plus
+
+    # Model 1: (dI/d(L+S) -> -I_0 = -1)
+    if model_up_down_flux == 1:
+        neg = 1
+        z0 = 1 - (1 - Beta) * omega
+        z1 = omega * mu_bar_val * K * np.exp(-K * (L + S))
+        I_down = (1 / (1 - omega * omega * Beta * Beta / (z0 * z0))) * (
+            (omega * Beta / z0) * (z1 * (1 - Beta_0) / z0 - mu_bar_val / z0)
+            + z1 * (1 - Beta_0) / z0
+            + mu_bar_val / z0
+        )
+        # If it's night, no incoming fluxs
+        if mu <= 0.00:
+            I_down = 0.0
+        I_up = omega * Beta * I_down / z0 + z1 * (Beta_0) / z0 - mu_bar_val / z0
+
     # Upgrade to Rk4 with better canopy model!!
 
-    # If close to zero cap,
-    if np.fabs(I_up) > 1e2:
-        I_up = 0.0
-    if np.fabs(I_down) > 1e2:
-        I_down = 0.0
+    # If it's night, no incoming fluxs
+    if mu <= 0.00:
+        vector_I_sun_lambda_mu = 0.0
+        vector_I_shade_lambda_mu = 0.0
+        vector_I_sun_lambda = 0.0
+        vector_I_shade_lambda = 0.0
+
+    # If close to sunset for fixed output (corrected by atompshere model anyway)
+    cuttoff = 2
+    if np.fabs(I_up) > cuttoff:
+        I_up = I_up / np.fabs(I_up) * (cuttoff)
+    if np.fabs(I_down) > cuttoff:
+        I_down = I_down / np.fabs(I_down) * (cuttoff)
+    if np.fabs(vector_I_sun_lambda_mu) > cuttoff:
+        vector_I_sun_lambda_mu = (
+            vector_I_sun_lambda_mu / np.fabs(vector_I_sun_lambda_mu) * (cuttoff)
+        )
+    if np.fabs(vector_I_shade_lambda_mu) > cuttoff:
+        vector_I_shade_lambda_mu = (
+            vector_I_shade_lambda_mu / np.fabs(vector_I_shade_lambda_mu) * (cuttoff)
+        )
+    if np.fabs(vector_I_sun_lambda) > cuttoff:
+        vector_I_sun_lambda = (
+            vector_I_sun_lambda / np.fabs(vector_I_sun_lambda) * (cuttoff)
+        )
+    if np.fabs(vector_I_shade_lambda) > cuttoff:
+        vector_I_shade_lambda = (
+            vector_I_shade_lambda / np.fabs(vector_I_shade_lambda) * (cuttoff)
+        )
 
     return (
         I_up,

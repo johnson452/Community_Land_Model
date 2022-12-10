@@ -141,7 +141,7 @@ class clm_grid:
         self.time_start: float = parameters.time_start
         self.time_end: float = parameters.time_end
         self.total_time: float = parameters.time_end - parameters.time_start
-        dt_approx = 0.1
+        dt_approx = 0.01  # 0.1
         self.NT: int = int(np.ceil(self.total_time / dt_approx))
         times, dt = np.linspace(self.time_start, self.time_end, self.NT, retstep=True)
         self.times: float = times
