@@ -2,6 +2,9 @@
 Contributors: Kevin, Harry, Grant
 Date: 11/09/2022
 
+# Code Documentation:
+https://community-land-model.readthedocs.io/en/latest/DIAGNOSTICS.html
+
 # Run a sample script and diagnostics
 Download the code:
 >> git clone https://github.com/johnson452/Community_Land_Model
