@@ -41,12 +41,20 @@ def diagnostics():
     str_val_y = "mu"
     plot_general(X, Y, str_val_x, str_val_y)
 
-    Y = State.I_up
-    str_val_y = "I_up"
+    Y = State.I_up_vis
+    str_val_y = "I_up_vis"
     plot_general(X, Y, str_val_x, str_val_y)
 
-    Y = State.I_down
-    str_val_y = "I_down"
+    Y = State.I_down_vis
+    str_val_y = "I_down_vis"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.I_up_nir
+    str_val_y = "I_up_nir"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.I_down_nir
+    str_val_y = "I_down_nir"
     plot_general(X, Y, str_val_x, str_val_y)
 
     Y = State.fcan_snow
@@ -63,6 +71,38 @@ def diagnostics():
 
     Y = State.S
     str_val_y = "S, Stem Coverage Frac"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.I_sun_vis_mu
+    str_val_y = "I_sun_vis_mu"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.I_sun_nir_mu
+    str_val_y = "I_sun_nir_mu"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.I_shade_vis_mu
+    str_val_y = "I_sun_vis_mu"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.I_shade_nir_mu
+    str_val_y = "I_sun_nir_mu"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.I_sun_vis
+    str_val_y = "I_sun_vis"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.I_sun_nir
+    str_val_y = "I_sun_nir"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.I_shade_vis
+    str_val_y = "I_sun_vis"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.I_shade_nir
+    str_val_y = "I_sun_nir"
     plot_general(X, Y, str_val_x, str_val_y)
 
 

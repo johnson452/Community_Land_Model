@@ -5,10 +5,12 @@ Inputs: State, Grid, App, i
 Outputs: None
 
 #Requires linking to the defintions:
+TABLES and METHODS subdirectories
 """
 import os
 import sys
 import numpy as np
+import warnings
 
 script_dir = os.path.dirname(__file__)
 mymodule_dir = os.path.join(script_dir, ".", "TABLES")
@@ -31,9 +33,34 @@ def run_albedo_model(State, Grid, App, i):
 
 
 def canopy(State, Grid, App, i):
-    I_up, I_down = canopy_model(State, Grid, App, i)
-    State.I_up[i] = I_up
-    State.I_down[i] = I_down
+
+    # Run the canopy model for both ir and vis
+    for j in range(2):  # [vis/nir model]
+        (
+            I_up,
+            I_down,
+            vector_I_sun_lambda_mu,
+            vector_I_shade_lambda_mu,
+            vector_I_sun_lambda,
+            vector_I_shade_lambda,
+        ) = canopy_model(State, Grid, App, i, j)
+
+        # Save to vis or nir
+        if j == 0:
+            State.I_up_vis[i] = I_up
+            State.I_down_vis[i] = I_down
+            State.I_sun_vis_mu[i] = vector_I_sun_lambda_mu
+            State.I_shade_vis_mu[i] = vector_I_shade_lambda_mu
+            State.I_sun_vis[i] = vector_I_sun_lambda
+            State.I_shade_vis[i] = vector_I_shade_lambda
+
+        if j == 1:
+            State.I_up_nir[i] = I_up
+            State.I_down_nir[i] = I_down
+            State.I_sun_nir_mu[i] = vector_I_sun_lambda_mu
+            State.I_shade_nir_mu[i] = vector_I_shade_lambda_mu
+            State.I_sun_nir[i] = vector_I_sun_lambda
+            State.I_shade_nir[i] = vector_I_shade_lambda
 
 
 def solar(State, Grid, App, i):
@@ -41,17 +68,38 @@ def solar(State, Grid, App, i):
 
 
 # From clm5: section 3.1, canopy model/radiative fluxes
-def canopy_model(State, Grid, App, i):
+def canopy_model(State, Grid, App, i, j):
 
     # Calculate the bar(mu) average inverse diffuse optical depth per unit leaf and stem area
     # Calculate the optical parameters
-    for j in range(2):  # [nir/vis model]
-        if j == 0:
-            I_up, I_down = optical_params(State, i, j)
-        if j == 1:
-            I_up, I_down = optical_params(State, i, j)
+    if j == 0:
+        (
+            I_up,
+            I_down,
+            vector_I_sun_lambda_mu,
+            vector_I_shade_lambda_mu,
+            vector_I_sun_lambda,
+            vector_I_shade_lambda,
+        ) = optical_params(State, i, j)
 
-    return I_up, I_down
+    if j == 1:
+        (
+            I_up,
+            I_down,
+            vector_I_sun_lambda_mu,
+            vector_I_shade_lambda_mu,
+            vector_I_sun_lambda,
+            vector_I_shade_lambda,
+        ) = optical_params(State, i, j)
+
+    return (
+        I_up,
+        I_down,
+        vector_I_sun_lambda_mu,
+        vector_I_shade_lambda_mu,
+        vector_I_sun_lambda,
+        vector_I_shade_lambda,
+    )
 
 
 # optical parameters:
@@ -65,6 +113,9 @@ def optical_params(State, i, j):
     # approximate models:
     L = State.L[i]
     S = State.S[i]
+
+    # Model for the up-down fluxes (1 is more accurate)
+    model_up_down_flux = 1
 
     # pft data
     Chi_L, alpha, tau = table_3_1_plant_optics.plant_props(State.pft)
@@ -122,7 +173,7 @@ def optical_params(State, i, j):
     # (alpha, tau -> weighted avgs.)
     alpha_lambda = alpha_lambda_leaf * w_leaf + alpha_lambda_stem * w_stem
     tau_lambda = tau_lambda_leaf * w_leaf + tau_lambda_stem * w_stem
-    omega_lambda_veg = alpha_lambda * (1 + tau_lambda)
+    omega_lambda_veg = alpha_lambda + tau_lambda
 
     # optical parameters: 3.5
     omega_lambda = omega_lambda_veg * (1 - fcan_snow) + omega_lambda_snow * fcan_snow
@@ -171,7 +222,7 @@ def optical_params(State, i, j):
     a_g_lambda = a_soi_lambda * (1 - fsno) + a_sno_lambda * fsno
 
     # Calculate various components, to simplify math: (3.31-3.57)
-    c = omega_lambda * omega_lambda_beta_lambda
+    c = omega_lambda_beta_lambda
     b = 1 - omega_lambda + c
     d = mu_bar_val * K * omega_lambda_beta_lambda_0
     f = omega_lambda * mu_bar_val * K - d
@@ -183,6 +234,9 @@ def optical_params(State, i, j):
     u1 = b - c / a_g_lambda
     u2 = b - c * a_g_lambda
     u3 = f + c * a_g_lambda
+
+    # suppress warnings for large values
+    warnings.filterwarnings("ignore")
     s1 = np.exp(-np.minimum(h * (L + S), 40))
     s2 = np.exp(-np.minimum(K * (L + S), 40))
     p1 = b + mu_bar_val * h
@@ -209,7 +263,7 @@ def optical_params(State, i, j):
         (h4 * (u2_mu + mu_bar_val * h) / (sigma * s1))
         + (u3_mu - (h4 / sigma) * (u2_mu - mu_bar_val * K)) * s2
     )
-    h6 = (1 / d1_mu) * (
+    h6 = (1 / d2_mu) * (
         (s1 * h4 * (u2_mu - mu_bar_val * h) / (sigma))
         + (u3_mu - (h4 / sigma) * (u2_mu - mu_bar_val * K)) * s2
     )
@@ -270,22 +324,73 @@ def optical_params(State, i, j):
     omega = omega_lambda
     Beta = omega_lambda_beta_lambda / omega
     Beta_0 = omega_lambda_beta_lambda_0 / omega
-    z_plus = mu_bar_val * (-1) + (1 - (1 - Beta) * omega)
-    z_minus = -mu_bar_val * (-1) + (1 - (1 - Beta) * omega)
-    z1 = omega * mu_bar_val * K * np.exp(-K * (L + S))
-    I_up = (1 / (1 - omega * omega * Beta * Beta / (z_minus * z_plus))) * (
-        omega * Beta * z1 * (1 - Beta_0) / (z_minus * z_plus) + z1 * Beta_0
-    )
-    I_down = omega * Beta * I_up / z_plus + z1 * (1 - Beta_0) / z_plus
+
+    # Model 0: (dI/d(L+S) -> -I)
+    if model_up_down_flux == 0:
+        z_minus = -mu_bar_val * (-1) + (1 - (1 - Beta) * omega)
+        z_plus = mu_bar_val * (-1) + (1 - (1 - Beta) * omega)
+        z1 = omega * mu_bar_val * K * np.exp(-K * (L + S))
+        I_up = (1 / (1 - omega * omega * Beta * Beta / (z_minus * z_plus))) * (
+            omega * Beta * z1 * (1 - Beta_0) / (z_minus * z_plus)
+            + z1 * Beta_0 / z_minus
+        )
+        I_down = omega * Beta * I_up / z_plus + z1 * (1 - Beta_0) / z_plus
+
+    # Model 1: (dI/d(L+S) -> -I_0 = -1)
+    if model_up_down_flux == 1:
+        neg = 1
+        z0 = 1 - (1 - Beta) * omega
+        z1 = omega * mu_bar_val * K * np.exp(-K * (L + S))
+        I_down = (1 / (1 - omega * omega * Beta * Beta / (z0 * z0))) * (
+            (omega * Beta / z0) * (z1 * (1 - Beta_0) / z0 - mu_bar_val / z0)
+            + z1 * (1 - Beta_0) / z0
+            + mu_bar_val / z0
+        )
+        # If it's night, no incoming fluxs
+        if mu <= 0.00:
+            I_down = 0.0
+        I_up = omega * Beta * I_down / z0 + z1 * (Beta_0) / z0 - mu_bar_val / z0
+
     # Upgrade to Rk4 with better canopy model!!
 
-    # If close to zero cap,
-    if np.fabs(I_up) > 1e2:
-        I_up = 0.0
-    if np.fabs(I_down) > 1e2:
-        I_down = 0.0
+    # If it's night, no incoming fluxs
+    if mu <= 0.00:
+        vector_I_sun_lambda_mu = 0.0
+        vector_I_shade_lambda_mu = 0.0
+        vector_I_sun_lambda = 0.0
+        vector_I_shade_lambda = 0.0
 
-    return I_up, I_down
+    # If close to sunset for fixed output (corrected by atompshere model anyway)
+    cuttoff = 2
+    if np.fabs(I_up) > cuttoff:
+        I_up = I_up / np.fabs(I_up) * (cuttoff)
+    if np.fabs(I_down) > cuttoff:
+        I_down = I_down / np.fabs(I_down) * (cuttoff)
+    if np.fabs(vector_I_sun_lambda_mu) > cuttoff:
+        vector_I_sun_lambda_mu = (
+            vector_I_sun_lambda_mu / np.fabs(vector_I_sun_lambda_mu) * (cuttoff)
+        )
+    if np.fabs(vector_I_shade_lambda_mu) > cuttoff:
+        vector_I_shade_lambda_mu = (
+            vector_I_shade_lambda_mu / np.fabs(vector_I_shade_lambda_mu) * (cuttoff)
+        )
+    if np.fabs(vector_I_sun_lambda) > cuttoff:
+        vector_I_sun_lambda = (
+            vector_I_sun_lambda / np.fabs(vector_I_sun_lambda) * (cuttoff)
+        )
+    if np.fabs(vector_I_shade_lambda) > cuttoff:
+        vector_I_shade_lambda = (
+            vector_I_shade_lambda / np.fabs(vector_I_shade_lambda) * (cuttoff)
+        )
+
+    return (
+        I_up,
+        I_down,
+        vector_I_sun_lambda_mu,
+        vector_I_shade_lambda_mu,
+        vector_I_sun_lambda,
+        vector_I_shade_lambda,
+    )
 
 
 # From clm5: section 3.3

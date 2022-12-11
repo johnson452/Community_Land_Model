@@ -63,8 +63,20 @@ class clm_state:
         # L, S, fraction of ground covered by Leafs, and Stems
         NT = Grid.NT
         self.mu = np.zeros(NT)
-        self.I_up = np.zeros(NT)
-        self.I_down = np.zeros(NT)
+        self.I_up_vis = np.zeros(NT)
+        self.I_down_vis = np.zeros(NT)
+        self.I_up_nir = np.zeros(NT)
+        self.I_down_nir = np.zeros(NT)
+
+        self.I_sun_vis_mu = np.zeros(NT)
+        self.I_sun_nir_mu = np.zeros(NT)
+        self.I_shade_vis_mu = np.zeros(NT)
+        self.I_shade_nir_mu = np.zeros(NT)
+        self.I_sun_vis = np.zeros(NT)
+        self.I_sun_nir = np.zeros(NT)
+        self.I_shade_vis = np.zeros(NT)
+        self.I_shade_nir = np.zeros(NT)
+
         self.fcan_snow = np.zeros(NT)
         self.fsno = np.zeros(NT)
         self.L = np.zeros(NT)
@@ -86,10 +98,16 @@ class clm_state:
                 t = Grid.time(i)
                 phase = np.pi * (t / 365.25)
                 self.fcan_snow[i] = 0.3 * (
-                    np.sin(phase + np.pi / 2) * np.sin(phase + np.pi / 2)
+                    np.sin(phase + np.pi / 2)
+                    * np.sin(phase + np.pi / 2)
+                    * np.sin(phase + np.pi / 2)
+                    * np.sin(phase + np.pi / 2)
                 )
                 self.fsno[i] = 0.3 * (
-                    np.sin(phase + np.pi / 2) * np.sin(phase + np.pi / 2)
+                    np.sin(phase + np.pi / 2)
+                    * np.sin(phase + np.pi / 2)
+                    * np.sin(phase + np.pi / 2)
+                    * np.sin(phase + np.pi / 2)
                 )
                 self.L[i] = 0.15 + 0.5 * (np.sin(phase) * np.sin(phase))
                 self.S[i] = 0.05 + 0.25 * (
@@ -123,7 +141,7 @@ class clm_grid:
         self.time_start: float = parameters.time_start
         self.time_end: float = parameters.time_end
         self.total_time: float = parameters.time_end - parameters.time_start
-        dt_approx = 0.1
+        dt_approx = 0.01  # 0.1
         self.NT: int = int(np.ceil(self.total_time / dt_approx))
         times, dt = np.linspace(self.time_start, self.time_end, self.NT, retstep=True)
         self.times: float = times
