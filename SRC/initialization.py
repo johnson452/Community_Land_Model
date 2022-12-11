@@ -68,6 +68,14 @@ class clm_state:
             self.pft = "BDT temperate"  # plant functional type (BD: boreal desiduos)
         else:
             assert "Invalid Location Specified"
+        # Temperature as a function of the day in year modeled by KY using 2021 data
+        # Misfit of the model is 0.1454, which I (KY) think is acceptable
+        self.temperature = (
+            55.0901
+            - 19.6674 * np.cos(2 * np.pi * Grid.times / 365)
+            - 8.6196 * np.sin(2 * np.pi * Grid.times / 365)
+        )
+        
 
     def save(self):
         """save class as self.name.txt"""
