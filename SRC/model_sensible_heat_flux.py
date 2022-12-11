@@ -19,7 +19,7 @@ sys.path.append(mymodule_dir)
 def run_sensible_heat_flux_model(State, Grid, App, i):
     print("Running sensible_heat_flux Model\n")
 
-# Disregard the effects of snow and surface water coververed area
+# Disregard the effects of surface water coververed area
 def sensible_heat_flux(State,Grid, App, i):
     Cp = table_2_7_physical_constants.physical_constants("specific heat capacity of water")
-
+    
