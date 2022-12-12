@@ -37,6 +37,8 @@ def save_radiation_fluxes(State, Grid, App, i):
         tot_sol_rad_abs_g,
         vis_in,
         IR_in,
+        theta_sun,
+        theta_sha,
     ) = solar_fluxes(State, Grid, App, i)
 
     # Save the outputs back to the State Variables
@@ -47,6 +49,8 @@ def save_radiation_fluxes(State, Grid, App, i):
     State.radiation.tot_sol_rad_abs_g[i] = tot_sol_rad_abs_g
     State.radiation.vis_in[i] = vis_in
     State.radiation.IR_in[i] = IR_in
+    State.radiation.abs_vis_rad_sun[i] = theta_sun
+    State.radiation.abs_vis_rad_sha[i] = theta_sha
 
 
 def solar_fluxes(State, Grid, App, i):
@@ -134,7 +138,6 @@ def solar_fluxes(State, Grid, App, i):
         )
     else:
         # Calculate equation 4.3
-        # THIS LOOKS G
         tot_sol_rad_abs_v = 0
         tot_sol_rad_abs_g = (
             S_dir_vis * (1 - State.a_g_lambda_vis_mu[i])
@@ -142,6 +145,22 @@ def solar_fluxes(State, Grid, App, i):
             + S_dif_vis * (1 - State.a_g_lambda_vis[i])
             + S_dif_nir * (1 - State.a_g_lambda_vis[i])
         )
+
+    # Sunlit Plant Area Index - # Equation 4.7
+    L_sun = (1 - K_exp) / K
+    L_sha = L + S - L_sun
+
+    # Calculate absorbed photosynthetically VIS Radiation
+    # Equ 4.5
+    theta_sun = max(
+        0, (State.I_sun_vis_mu[i] * S_dir_vis + State.I_sun_vis[i] * S_dif_vis) / L_sun
+    )
+    # Eq 4.6
+    theta_sha = max(
+        0,
+        (State.I_shade_vis_mu[i] * S_dir_vis + State.I_shade_vis[i] * S_dif_vis)
+        / L_sha,
+    )
 
     return (
         total_rad_i,  # Total Incoming Radiation
@@ -151,6 +170,8 @@ def solar_fluxes(State, Grid, App, i):
         tot_sol_rad_abs_g,  # Total Solar Radiation abs. by ground
         vis_in,  # Visible Incoming Radiation
         IR_in,  # IR Incoming Radiation
+        theta_sun,  # Absorbed photo active radiation by sunlit canopy
+        theta_sha,  # Absorbed photo active radiation by sunlit canopy
     )
 
 
