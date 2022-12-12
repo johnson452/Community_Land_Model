@@ -210,6 +210,10 @@ class radiation:
         self.solar_dif_tot = np.zeros(NT)
         self.tot_sol_rad_abs_v = np.zeros(NT)  # Vegetation Radiation
         self.tot_sol_rad_abs_g = np.zeros(NT)  # Ground Radiation
+        # Absorbed Photosynthetically active Radiation for sunlit and shaded canopy
+        # Equations 4.5 - 4.8
+        self.abs_vis_rad_sun = np.zeros(NT)
+        self.abs_vis_rad_sha = np.zeros(NT)
 
         # Helpful inputs to the Radiation Module
         self.vegetated_surface = parameters.vegetated_surface
@@ -232,6 +236,7 @@ class input_data:
         self.df = self.df[csv_start:csv_end]
 
         # Save all data as np.arrays for ease of use
+        self.datatypes: dict(str, str) = {"Radiation": "W/m2"}
         self.vis_in = np.array(self.df[parameters.vis_in_str])
         self.vis_out = np.array(self.df[parameters.vis_out_str])
         self.IR_in = np.array(self.df[parameters.IR_in_str])
