@@ -11,9 +11,12 @@ import os
 import sys
 import pickle
 import numpy as np
+import pandas as pd
 
 script_dir = os.path.dirname(__file__)
 mymodule_dir = os.path.join(script_dir, "..", "OUTPUT")
+datamodule_dir = os.path.join(script_dir, "..", "EXAMPLES")
+sys.path.append(datamodule_dir)
 
 
 def initialize_data(parameters):
@@ -28,6 +31,7 @@ class clm_app:
         self.name = "App_Data"
         self.model_evaporation = parameters.model_evaporation
         self.model_albedo = parameters.model_albedo
+        self.model_radiation_fluxes = parameters.model_radiation_fluxes
         self.model_sensible_heat_flux = parameters.model_sensible_heat_flux
         self.model_absorbed_emitted_radiation = (
             parameters.model_absorbed_emitted_radiation
@@ -56,12 +60,20 @@ class clm_state:
     def __init__(self, parameters, Grid):
         self.name = "State_Data"
 
+        # Number of timesteps
+        NT = Grid.NT
+
+        # Load in the Data.CSV file
+        if parameters.data_start:
+            self.data = input_data(parameters, NT)
+        """ Returns an instance of a load_data object"""
+        # Currently just runs for a whole year
+
         # (Albedo data)
         # mu: cosine of the solar zenith angle
         # L_up/ L_down Radiation through the canopy
         # fcan_snow Snow covering of the canopy
         # L, S, fraction of ground covered by Leafs, and Stems
-        NT = Grid.NT
         self.mu = np.zeros(NT)
         self.I_up_vis = np.zeros(NT)
         self.I_down_vis = np.zeros(NT)
@@ -125,6 +137,25 @@ class clm_state:
 
         
 
+        # Additional intermediate albedo results for data handoffs
+        # self.vector_I_lambda_mu = np.zeros(NT)
+        # self.vector_I_lambda = np.zeros(NT)
+        self.I_lambda_vis_mu = np.zeros(NT)
+        self.I_lambda_vis = np.zeros(NT)
+        self.I_lambda_nir_mu = np.zeros(NT)
+        self.I_lambda_nir = np.zeros(NT)
+        self.a_g_lambda_vis_mu = np.zeros(NT)
+        self.a_g_lambda_vis = np.zeros(NT)
+        self.a_g_lambda_nir_mu = np.zeros(NT)
+        self.a_g_lambda_nir = np.zeros(NT)
+        self.I_down_lambda_vis_mu = np.zeros(NT)
+        self.I_down_lambda_vis = np.zeros(NT)
+        self.I_down_lambda_nir_mu = np.zeros(NT)
+        self.I_down_lambda_nir = np.zeros(NT)
+
+        # Move Radiation STATE Variables to subclass
+        self.radiation = radiation(parameters, NT)
+
     def save(self):
         """save class as self.name.txt"""
         print("Saving state\n")
@@ -150,7 +181,8 @@ class clm_grid:
         self.time_start: float = parameters.time_start
         self.time_end: float = parameters.time_end
         self.total_time: float = parameters.time_end - parameters.time_start
-        dt_approx = 0.01  # 0.1
+        dt_approx = 0.01  # 0.01  # 0.1, 0.01
+        self.dt_approx = dt_approx
         self.NT: int = int(np.ceil(self.total_time / dt_approx))
         times, dt = np.linspace(self.time_start, self.time_end, self.NT, retstep=True)
         self.times: float = times
@@ -176,3 +208,40 @@ class clm_grid:
 
         self = pickle.loads(dataPickle)
         return self
+
+
+class radiation:
+    def __init__(self, parameters, NT):
+        """Subclass for Radiation Model"""
+        # Arrays to be filled in by the Radiation_Fluxes module
+        self.total_solar_radiation = np.zeros(NT)
+        self.solar_dir_tot = np.zeros(NT)
+        self.solar_dif_tot = np.zeros(NT)
+        self.tot_sol_rad_abs_v = np.zeros(NT)  # Vegetation Radiation
+        self.tot_sol_rad_abs_g = np.zeros(NT)  # Ground Radiation
+
+        # Helpful inputs to the Radiation Module
+        self.vegetated_surface = parameters.vegetated_surface
+
+        # self.stefan_boltzmann = # W/m2/k4
+
+        # Convert the input data to fractional data
+        self.vis_in = np.zeros(NT)
+        self.IR_in = np.zeros(NT)
+
+
+class input_data:
+    def __init__(self, parameters, NT):
+        """Returns npArrays for each input dataset"""
+        # Read in CSV
+        csv_loc = parameters.data_filename
+        csv_start = parameters.time_start
+        csv_end = parameters.time_end
+        self.df = pd.read_csv(datamodule_dir + "/" + csv_loc)
+        self.df = self.df[csv_start:csv_end]
+
+        # Save all data as np.arrays for ease of use
+        self.vis_in = np.array(self.df[parameters.vis_in_str])
+        self.vis_out = np.array(self.df[parameters.vis_out_str])
+        self.IR_in = np.array(self.df[parameters.IR_in_str])
+        self.IR_out = np.array(self.df[parameters.IR_out_str])

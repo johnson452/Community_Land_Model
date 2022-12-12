@@ -9,6 +9,7 @@ SRC/model_albedo.py
 import os
 import sys
 import pytest
+import pandas
 
 script_dir = os.path.dirname(__file__)
 mymodule_dir = os.path.join(script_dir, "..", "SRC")

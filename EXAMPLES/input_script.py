@@ -4,7 +4,7 @@ Main Project loop:
 Inputs: None
 Outputs: None
 
-#Requires linking to the defintions:
+#Requires linking to the definitions:
 initialize_data, run_clm
 """
 import os
@@ -24,13 +24,23 @@ class clm_parameters:
         # Structure name
         self.name = "Parameter_Data"
 
-        # General parameters:
+        # Location parameters:
         self.time_start: float = 0
         self.time_end: float = 365
         self.location: str = "Princeton"
+        self.vegetated_surface: bool = True
+
+        # Input data parameters/include
+        self.data_start: bool = True
+        self.data_filename: str = "data.csv"
+        self.vis_in_str: str = "Vis_in"
+        self.vis_out_str: str = "Vis_out"
+        self.IR_in_str: str = "IR_in"
+        self.IR_out_str: str = "IR_out"
 
         # Models to include:
         self.model_albedo: bool = True
+        self.model_radiation_fluxes: bool = True
         self.model_absorbed_emitted_radiation: bool = True
         self.model_evaporation: bool = True
         self.model_sensible_heat_flux: bool = True
@@ -38,6 +48,8 @@ class clm_parameters:
         # Model Parameters
         if self.model_albedo:
             self.default_albedo_conditions: bool = True
+        if self.model_radiation_fluxes:
+            self.radiation_conditions: bool = True
         if self.model_absorbed_emitted_radiation:
             self.absorbed_emitted_radiation_conditions: bool = True
         if self.model_evaporation:

@@ -43,6 +43,12 @@ def canopy(State, Grid, App, i):
             vector_I_shade_lambda_mu,
             vector_I_sun_lambda,
             vector_I_shade_lambda,
+            vector_I_lambda_mu,
+            vector_I_lambda,
+            vector_a_g_lambda_mu,
+            vector_a_g_lambda,
+            I_down_lambda_mu,
+            I_down_lambda,
         ) = canopy_model(State, Grid, App, i, j)
 
         # Save to vis or nir
@@ -53,6 +59,12 @@ def canopy(State, Grid, App, i):
             State.I_shade_vis_mu[i] = vector_I_shade_lambda_mu
             State.I_sun_vis[i] = vector_I_sun_lambda
             State.I_shade_vis[i] = vector_I_shade_lambda
+            State.I_lambda_vis_mu[i] = vector_I_lambda_mu
+            State.I_lambda_vis[i] = vector_I_lambda
+            State.a_g_lambda_vis_mu[i] = vector_a_g_lambda_mu
+            State.a_g_lambda_vis[i] = vector_a_g_lambda
+            State.I_down_lambda_vis_mu[i] = I_down_lambda_mu
+            State.I_down_lambda_vis[i] = I_down_lambda
 
         if j == 1:
             State.I_up_nir[i] = I_up
@@ -61,6 +73,12 @@ def canopy(State, Grid, App, i):
             State.I_shade_nir_mu[i] = vector_I_shade_lambda_mu
             State.I_sun_nir[i] = vector_I_sun_lambda
             State.I_shade_nir[i] = vector_I_shade_lambda
+            State.I_lambda_nir_mu[i] = vector_I_lambda_mu
+            State.I_lambda_nir[i] = vector_I_lambda
+            State.a_g_lambda_nir_mu[i] = vector_a_g_lambda_mu
+            State.a_g_lambda_nir[i] = vector_a_g_lambda
+            State.I_down_lambda_nir_mu[i] = I_down_lambda_mu
+            State.I_down_lambda_nir[i] = I_down_lambda
 
 
 def solar(State, Grid, App, i):
@@ -80,6 +98,12 @@ def canopy_model(State, Grid, App, i, j):
             vector_I_shade_lambda_mu,
             vector_I_sun_lambda,
             vector_I_shade_lambda,
+            vector_I_lambda_mu,
+            vector_I_lambda,
+            vector_a_g_lambda_mu,
+            vector_a_g_lambda,
+            I_down_lambda_mu,
+            I_down_lambda,
         ) = optical_params(State, i, j)
 
     if j == 1:
@@ -90,6 +114,12 @@ def canopy_model(State, Grid, App, i, j):
             vector_I_shade_lambda_mu,
             vector_I_sun_lambda,
             vector_I_shade_lambda,
+            vector_I_lambda_mu,
+            vector_I_lambda,
+            vector_a_g_lambda_mu,
+            vector_a_g_lambda,
+            I_down_lambda_mu,
+            I_down_lambda,
         ) = optical_params(State, i, j)
 
     return (
@@ -99,6 +129,12 @@ def canopy_model(State, Grid, App, i, j):
         vector_I_shade_lambda_mu,
         vector_I_sun_lambda,
         vector_I_shade_lambda,
+        vector_I_lambda_mu,
+        vector_I_lambda,
+        vector_a_g_lambda_mu,
+        vector_a_g_lambda,
+        I_down_lambda_mu,
+        I_down_lambda,
     )
 
 
@@ -217,7 +253,7 @@ def optical_params(State, i, j):
         + omega_lambda_snow * beta_lambda_snow_0 * fcan_snow
     )
 
-    # Caluculate (Ground albedos Section 3.2)
+    # Calculate (Ground albedos Section 3.2)
     a_g_lambda_mu = a_soi_lambda_mu * (1 - fsno) + a_sno_lambda_mu * fsno
     a_g_lambda = a_soi_lambda * (1 - fsno) + a_sno_lambda * fsno
 
@@ -305,6 +341,9 @@ def optical_params(State, i, j):
         - (1 - a_g_lambda_mu) * np.exp(-K * (L + S))
     )
     vector_I_lambda = 1 - I_up_lambda - (1 - a_g_lambda) * I_down_lambda
+    # Save intermediate results
+    # State.vector_I_lambda_mu[i] = vector_I_lambda_mu
+    # State.vector_I_lambda[i] = vector_I_lambda
 
     # The absorption of direct beam radiation by sunlit leaves ( 3.23 )
     vector_I_sun_lambda_mu = (1 - omega_lambda) * (
@@ -346,7 +385,7 @@ def optical_params(State, i, j):
             + z1 * (1 - Beta_0) / z0
             + mu_bar_val / z0
         )
-        # If it's night, no incoming fluxs
+        # If it's night, no incoming fluxes
         if mu <= 0.00:
             I_down = 0.0
         I_up = omega * Beta * I_down / z0 + z1 * (Beta_0) / z0 - mu_bar_val / z0
@@ -390,6 +429,13 @@ def optical_params(State, i, j):
         vector_I_shade_lambda_mu,
         vector_I_sun_lambda,
         vector_I_shade_lambda,
+        # Save intermediate results
+        vector_I_lambda_mu,
+        vector_I_lambda,
+        a_g_lambda_mu,
+        a_g_lambda,
+        I_down_lambda_mu,
+        I_down_lambda,
     )
 
 
