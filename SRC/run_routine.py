@@ -15,6 +15,7 @@ script_dir = os.path.dirname(__file__)
 mymodule_dir = os.path.join(script_dir, "..", "SRC")
 sys.path.append(mymodule_dir)
 import model_albedo
+import model_radiation_fluxes
 import model_absorbed_emitted_radiation
 import model_evaporation
 import model_sensible_heat_flux
@@ -33,11 +34,15 @@ def run_clm(App, State, Grid):
             model_albedo.run_albedo_model(State, Grid, App, i)
             print("Running: run_clm - model_albedo, iter: " + str(i) + "\n")
 
+        if App.model_radiation_fluxes:
+            model_radiation_fluxes.run_radiation_model(State, Grid, App, i)
+            print("Running run_clm - model_radiation, iter: " + str(i) + "\n")
+
         if App.model_absorbed_emitted_radiation:
             model_absorbed_emitted_radiation.run_absorbed_emitted_radiation_model(
                 State, Grid, App, i
             )
-            print("Running: run_clm - model_radiation, iter: " + str(i) + "\n")
+            print("Running: run_clm - model_radiation_old, iter: " + str(i) + "\n")
 
         if App.model_evaporation:
             model_evaporation.run_evaporation_model(State, Grid, App, i)

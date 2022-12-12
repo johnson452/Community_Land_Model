@@ -105,6 +105,31 @@ def diagnostics():
     str_val_y = "I_sun_nir"
     plot_general(X, Y, str_val_x, str_val_y)
 
+    # Radiation Plots
+    Y = State.radiation.vis_in
+    str_val_y = "Vis_in"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.radiation.total_solar_radiation
+    str_val_y = "Total_Solar_Radiation"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.radiation.solar_dir_tot
+    str_val_y = "Total_Dir_Radiation"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.radiation.solar_dif_tot
+    str_val_y = "Total_Dif_Radiation"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.radiation.tot_sol_rad_abs_v
+    str_val_y = "Tot_Sol_Rad_Abs_by_Veg"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.radiation.tot_sol_rad_abs_g
+    str_val_y = "Tot_Sol_Rad_Abs_by_Ground"
+    plot_general(X, Y, str_val_x, str_val_y)
+
 
 # Build the mu vs t plot and save it
 def plot_general(X, Y, str_val_x, str_val_y):
