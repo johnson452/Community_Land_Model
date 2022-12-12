@@ -81,6 +81,7 @@ def solar_fluxes(State, Grid, App, i):
 
     # Load in more parameters calculated in initialization State
     mu = State.mu[i]
+    mu = abs(mu)  # Debugger
     L = State.L[i]
     S = State.S[i]
 
@@ -97,14 +98,27 @@ def solar_fluxes(State, Grid, App, i):
         #    S_dir_tot * State.vector_I_lambda_mu[i] +
         #    S_dif_tot * State.vector_I_lambda[i])
         # Calculate Equation 4.1
-        tot_sol_rad_abs_v = (
-            S_dir_vis * State.I_lambda_vis_mu[i]
-            + S_dir_nir * State.I_lambda_nir_mu[i]
-            + S_dif_vis * State.I_lambda_vis[i]
-            + S_dif_nir * State.I_lambda_nir[i]
+
+        # All lambdas should be between -1 and 1
+        I_lambda_vis_mu = min(1, State.I_lambda_vis_mu[i])
+        I_lambda_vis_mu = max(-1, I_lambda_vis_mu)
+        I_lambda_nir_mu = min(1, State.I_lambda_nir_mu[i])
+        I_lambda_nir_mu = max(-1, I_lambda_nir_mu)
+        I_lambda_vis = min(1, State.I_lambda_vis[i])
+        I_lambda_vis = max(-1, I_lambda_vis)
+        I_lambda_nir = min(1, State.I_lambda_nir[i])
+        I_lambda_nir = max(-1, I_lambda_nir)
+
+        tot_sol_rad_abs_v = max(
+            0,
+            S_dir_vis * I_lambda_vis_mu
+            + S_dir_nir * I_lambda_nir_mu
+            + S_dif_vis * I_lambda_vis
+            + S_dif_nir * I_lambda_nir,
         )
         # Calculate Equation 4.2
-        tot_sol_rad_abs_g = (
+        tot_sol_rad_abs_g = max(
+            0,
             S_dir_vis * K_exp * (1 - State.a_g_lambda_vis_mu[i])
             + S_dir_nir * K_exp * (1 - State.a_g_lambda_nir_mu[i])
             + (
@@ -116,10 +130,11 @@ def solar_fluxes(State, Grid, App, i):
                 S_dir_nir * State.I_down_lambda_nir_mu[i]
                 + S_dif_nir * State.I_down_lambda_nir[i]
             )
-            * (1 - State.a_g_lambda_vis[i])
+            * (1 - State.a_g_lambda_vis[i]),
         )
     else:
         # Calculate equation 4.3
+        # THIS LOOKS G
         tot_sol_rad_abs_v = 0
         tot_sol_rad_abs_g = (
             S_dir_vis * (1 - State.a_g_lambda_vis_mu[i])
