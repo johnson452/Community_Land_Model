@@ -13,9 +13,9 @@
 #         ''' Returns a data class that contains a nparray for each of the datasets'''
 #         # Read in CSV
 #         self.df = pd.read_csv(datamodule_dir + '/' + 'data.csv')
-        
+
 
 #     def test(self):
-#         print("woo")    
+#         print("woo")
 
 # #a = data_loader()
