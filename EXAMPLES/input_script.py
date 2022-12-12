@@ -37,6 +37,7 @@ class clm_parameters:
         self.vis_out_str: str = "Vis_out"
         self.IR_in_str: str = "IR_in"
         self.IR_out_str: str = "IR_out"
+        self.T_g_str: str = "T_g"
 
         # Models to include:
         self.model_albedo: bool = True
