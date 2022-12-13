@@ -74,7 +74,7 @@ def save_radiation_fluxes(State, Grid, App, i):
 
 
 def input_fluxes(State, Grid, App, i):
-    """Transforms the dialy input radiation data to match that of the timestep"""
+    """Transforms the daily input radiation data to match that of the timestep"""
     day = i // (1 / Grid.dt_approx)
     day = int(day)
     vis_in = State.data.vis_in[day]
@@ -200,15 +200,16 @@ def solar_fluxes(State, Grid, App, i):
 def longwave_fluxes(State, Grid, App, i):
     """Second part of Chapter 4"""
     print("Running Longwave Flux Calculator Model\n")
+
     # Equations 4.9 - 4.20
     lw_down = State.radiation.IR_in[i]
     lw_up = State.radiation.IR_out[i]
     T_g = State.radiation.T_g[i]
     T_g_prev = T_g
-    if i > 1:
+    if i > 0:
         T_g_prev = State.radiation.T_g[i - 1]
     T_v_prev = State.radiation.T_v[0]
-    if i > 1:
+    if i > 0:
         T_v_prev = State.radiation.T_v[i - 1]
 
     # Net Longwave radiation at Surface - equation 4.9
@@ -236,12 +237,10 @@ def longwave_fluxes(State, Grid, App, i):
 
     # Check if Vegetated Surface or not
     if not State.radiation.vegetated_surface:
-        T_v = 0
+        T_v = T_g
         lw_net_rad_veg = 0
-
         # Solve for temperature Ground from 4.12
         # T_g =
-
         lw_down_blw_veg = 0
     else:
         # Only assume vegetation exists if vegetated_surface flag is turned on
@@ -249,7 +248,9 @@ def longwave_fluxes(State, Grid, App, i):
             step_veg = 1
 
         # Equation 4.13 and 4.14
-        lw_up_system = lw_up - 4 * epsilon_g * (T_g_prev) ** 3 * (T_g - T_g_prev)
+        lw_up_system = lw_up - 4 * epsilon_g * stef_boltz * (T_g_prev) ** 3 * (
+            T_g - T_g_prev
+        )
         T_v = (
             (
                 lw_up_system
@@ -263,7 +264,7 @@ def longwave_fluxes(State, Grid, App, i):
                 * T_v_prev**3
             )
             - T_v_prev
-        ) / 4 - T_v_prev
+        ) / 4 + T_v_prev
 
         # Equation 4.16
         lw_down_blw_veg = (
@@ -274,9 +275,8 @@ def longwave_fluxes(State, Grid, App, i):
 
         # Equation 4.18
         lw_net_rad_veg = (
-            2
-            - epsilon_v * (1 - epsilon_g) * (epsilon_v * stef_boltz * T_v**4)
-            - epsilon_v * epsilon_g * T_g**4
+            (2 - epsilon_v * (1 - epsilon_g)) * (epsilon_v * stef_boltz * T_v**4)
+            - epsilon_v * epsilon_g * stef_boltz * T_g**4
             - epsilon_v * (1 + (1 - epsilon_g) * (1 - epsilon_v)) * lw_down
         )
 
