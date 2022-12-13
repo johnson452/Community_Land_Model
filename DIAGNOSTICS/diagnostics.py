@@ -130,6 +130,30 @@ def diagnostics():
     str_val_y = "Tot_Sol_Rad_Abs_by_Ground"
     plot_general(X, Y, str_val_x, str_val_y)
 
+    Y = State.radiation.lw_net_rad
+    str_val_y = "lw_net_rad"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.radiation.T_rad
+    str_val_y = "T_rad_K"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.radiation.T_v
+    str_val_y = "T_v_K"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.radiation.T_g
+    str_val_y = "T_g_K"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.radiation.lw_net_rad_gro
+    str_val_y = "lw_net_rad_gro_Wm2"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.radiation.lw_net_rad_veg
+    str_val_y = "lw_net_rad_veg_Wm2"
+    plot_general(X, Y, str_val_x, str_val_y)
+
 
 # Build the mu vs t plot and save it
 def plot_general(X, Y, str_val_x, str_val_y):

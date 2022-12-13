@@ -218,7 +218,7 @@ class radiation:
         # Outputs from the LW Flux Calculate
         self.lw_net_rad = np.zeros(NT)
         self.T_rad = np.zeros(NT)
-        self.T_v = np.zeros(NT)
+        self.T_v = np.ones(NT) * 273.15
         self.lw_net_rad_gro = np.zeros(NT)
         self.lw_net_rad_veg = np.zeros(NT)
 
