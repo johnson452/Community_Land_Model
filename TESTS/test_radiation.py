@@ -212,4 +212,10 @@ def test_radiation_soft_code(test_run):
 
 # For running solo
 if __name__ == "__main__":
-    test_radiation()
+    # @pytest.fixture
+    test_run()
+    test_r_vis_calc()
+    test_r_nir_calc()
+    test_ratio_test()
+    test_radiation_hard_code(test_run())
+    test_radiation_soft_code(test_run())
