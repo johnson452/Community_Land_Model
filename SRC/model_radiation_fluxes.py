@@ -299,7 +299,11 @@ def longwave_fluxes(State, Grid, App, i):
 
 ## Helper functions
 def r_vis_calc(total_rad_i: float, vis_frac: float) -> float:
-    """Find the Ratio of direct to toal incident radiation in the visible - Equation 33.7"""
+    """Find the Ratio of direct to total incident radiation in the visible - Equation 33.7"""
+    # From pytests
+    vis_frac = max(0.00, vis_frac)
+    vis_frac = min(1.00, vis_frac)
+
     a_0 = 0.17639
     a_1 = 0.00380
     a_2 = -9.0039 * 10 ** (-6)
