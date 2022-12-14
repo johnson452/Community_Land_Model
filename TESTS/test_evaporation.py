@@ -23,14 +23,12 @@ import initialization
 
 
 def test_evaporation():
-    #Initialize
+    # Initialize
     parameters = input_script.clm_parameters()
     App, State, Grid = initialization.initialize_data(parameters)
 
-    print(me.air_res(1,2,3)[1])
-    #Test helper functions
+    # Test helper functions
     assert 4.3328664087712 == pytest.approx(me.psi(-1))
-    
 
 
 if __name__ == "__main__":

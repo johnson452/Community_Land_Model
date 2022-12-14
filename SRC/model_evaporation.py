@@ -25,21 +25,20 @@ def run_evaporation_model(State, Grid, App, i):
 
     # Iterate 100 times
     for i in range(100):
-        MO_length(State,Grid,App,i)
-        friction_velocity(State,Grid,App,i,psi)
-        temperature_ratio(State,Grid,App,i,psi)
-        humidity_ratio(State,Grid,App,i,psi)
-        air_res(State,Grid,App,i)
-        U_av(State,Grid,App,i)
-        q_sat(State,Grid,App,i)
-        r_b(State,Grid,App,i)
-        ra(State,Grid,App,i)
-        canopy_specific_humidity(State,Grid,App,i)
-        water_vapor_flux(State,Grid,App,i)
-        latent_heat_water_vapor_flux(State,Grid,App,i)
-        vegetation_water_vapor_flux(State,Grid,App,i)
-        
-        
+        MO_length(State, Grid, App, i)
+        friction_velocity(State, Grid, App, i, psi)
+        temperature_ratio(State, Grid, App, i, psi)
+        humidity_ratio(State, Grid, App, i, psi)
+        air_res(State, Grid, App, i)
+        U_av(State, Grid, App, i)
+        q_sat(State, Grid, App, i)
+        r_b(State, Grid, App, i)
+        ra(State, Grid, App, i)
+        canopy_specific_humidity(State, Grid, App, i)
+        water_vapor_flux(State, Grid, App, i)
+        latent_heat_water_vapor_flux(State, Grid, App, i)
+        vegetation_water_vapor_flux(State, Grid, App, i)
+
 
 def water_vapor_flux(State, Grid, App, i):
     E = -1.2 * State.evaporation.humidity_ratio[i] / State.evaporation.ra[i]
@@ -126,8 +125,6 @@ def q_sat(State, Grid, App, i):
     q_sat = (0.622 * e_sat) / (P - 0.378 * e_sat)
     State.evaporation.q_sat[i] = q_sat
     return q_sat
-
-
 
 
 def humidity_ratio(State, Grid, App, i, psi):
@@ -254,6 +251,7 @@ def canopy_specific_humidity(State, Grid, App, i):
     State.evaporation.q_s[i] = q_s
     return q_s
 
+
 def air_res(State, Grid, App, i):
     k = constants.physical_constants().constants["von karman constant"]
     Ksi = State.evaporation.Ksi[i]
@@ -271,23 +269,11 @@ def air_res(State, Grid, App, i):
             )
         )
     elif Ksi >= -1.574 and Ksi < 0:
-        del_q = (
-            1
-            / k
-            * ((np.log(z / z0) - psi(Ksi)) + psi(z0 / L))
-        )
+        del_q = 1 / k * ((np.log(z / z0) - psi(Ksi)) + psi(z0 / L))
     elif Ksi >= 0 and Ksi < 1:
-        del_q = (
-            1
-            / k
-            * (np.log(z / z0) + 5 * Ksi - 5 * z0 / L)
-        )
+        del_q = 1 / k * (np.log(z / z0) + 5 * Ksi - 5 * z0 / L)
     else:
-        del_q = (
-            1
-            / k
-            * (np.log(L / z0) + 5 + 5 * np.log(Ksi) + Ksi - 1 - 5 * z0 / L)
-        )
+        del_q = 1 / k * (np.log(L / z0) + 5 + 5 * np.log(Ksi) + Ksi - 1 - 5 * z0 / L)
 
     if Ksi < -1.574:
         del_t = (
@@ -300,30 +286,19 @@ def air_res(State, Grid, App, i):
             )
         )
     elif Ksi >= -1.574 and Ksi < 0:
-        del_t = (
-            1
-            / k
-            * ((np.log(z / z0) - psi(Ksi)) + psi(z0 / L))
-        )
+        del_t = 1 / k * ((np.log(z / z0) - psi(Ksi)) + psi(z0 / L))
     elif Ksi >= 0 and Ksi < 1:
-        del_t = (
-            1
-            / k
-            * (np.log(z / z0) + 5 * Ksi - 5 * z0 / L)
-        )
+        del_t = 1 / k * (np.log(z / z0) + 5 * Ksi - 5 * z0 / L)
     else:
-        del_t = (
-            1
-            / k
-            * (np.log(L / z0) + 5 + 5 * np.log(Ksi) + Ksi - 1 - 5 * z0 / L)
-        )
-    rw = del_q/State.evaporation.U_av[i]
-    rm = State.evaporation.windspeed[i]/((State.evaporation.U_av[i]) ** (2))
+        del_t = 1 / k * (np.log(L / z0) + 5 + 5 * np.log(Ksi) + Ksi - 1 - 5 * z0 / L)
+    rw = del_q / State.evaporation.U_av[i]
+    rm = State.evaporation.windspeed[i] / ((State.evaporation.U_av[i]) ** (2))
     rh = del_t / State.evaporation.U_av[i]
     State.evaporation.rm[i] = rm
     State.evaporation.rw[i] = rw
     State.evaporation.rh[i] = rh
     return (rw, rm, rh)
+
 
 # helper function
 
@@ -337,7 +312,3 @@ def psi(ksi):
         - 2 * (1 / np.tan(x))
         + np.pi / 2
     )
-
-
-
-

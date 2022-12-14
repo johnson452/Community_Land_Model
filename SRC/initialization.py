@@ -153,7 +153,7 @@ class clm_state:
         self.evaporation = evaporation(parameters, NT, Grid)
 
         # Move Sensible Heat STATE Variables to subclass
-        self.sensible_heat = sensible_heat(parameters, NT,Grid)
+        self.sensible_heat = sensible_heat(parameters, NT, Grid)
 
     def save(self):
         """save class as self.name.txt"""
@@ -319,6 +319,7 @@ class evaporation:
                     / (self.temperature[i] + 35.85)
                 )
             )
+
 
 class sensible_heat:
     def __init__(self, parameters, NT, Grid):
