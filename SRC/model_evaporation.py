@@ -24,7 +24,7 @@ def run_evaporation_model(State, Grid, App, i):
     print("Running evaporation Model\n")
 
     # Iterate 100 times
-    for i in range(100):
+    for k in range(100):
         MO_length(State, Grid, App, i)
         friction_velocity(State, Grid, App, i, psi)
         temperature_ratio(State, Grid, App, i, psi)
@@ -70,7 +70,7 @@ def MO_length(State, Grid, App, i):
     z = af.atm_inputs().constants["thickness"]
     Tv = 1.38 * State.evaporation.temperature[i]
     theta_v = 1.38 * State.evaporation.potential_temperature[i]
-    R_iB = ((9.8 / Tv) * theta_v * z) / State.evaporation.windspeed[i] ** 2
+    R_iB = ((9.8 / Tv) * theta_v * z) / (State.evaporation.windspeed[i] ** 2)
     if R_iB < 0:
         Ksi = R_iB * np.log(z)
     else:
@@ -231,7 +231,7 @@ def r_b(State, Grid, App, i):
 
 
 # rah = raw, eqs 5.122
-def ra(State, Grid, App, i, U_av):
+def ra(State, Grid, App, i):
     ra = 1 / (0.01 * State.evaporation.U_av[i])
     State.evaporation.ra[i] = ra
     return ra
