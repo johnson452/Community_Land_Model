@@ -150,7 +150,7 @@ class clm_state:
         self.radiation = radiation(parameters, NT)
 
         # Move Evaportation STATE Variables to subclass
-        self.evaporation = evaporation(parameters, NT)
+        self.evaporation = evaporation(parameters, NT, Grid)
 
     def save(self):
         """save class as self.name.txt"""
