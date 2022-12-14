@@ -29,14 +29,23 @@ def run_radiation_model(State, Grid, App, i):
 
 def save_radiation_fluxes(State, Grid, App, i):
     """Function that fills the STATE variables for use throughout model"""
+    (vis_in, vis_out, IR_in, IR_out, T_g) = input_fluxes(State, Grid, App, i)
+
+    # Save the observed fluxes for use later
+    State.radiation.vis_in[i] = vis_in
+    State.radiation.vis_out[i] = vis_out
+    State.radiation.IR_in[i] = IR_in
+    State.radiation.IR_out[i] = IR_out
+    State.radiation.T_g[i] = T_g
+
     (
         total_rad_i,
         S_dir_tot,
         S_dif_tot,
         tot_sol_rad_abs_v,
         tot_sol_rad_abs_g,
-        vis_in,
-        IR_in,
+        theta_sun,
+        theta_sha,
     ) = solar_fluxes(State, Grid, App, i)
 
     # Save the outputs back to the State Variables
@@ -45,18 +54,42 @@ def save_radiation_fluxes(State, Grid, App, i):
     State.radiation.solar_dif_tot[i] = S_dif_tot
     State.radiation.tot_sol_rad_abs_v[i] = tot_sol_rad_abs_v
     State.radiation.tot_sol_rad_abs_g[i] = tot_sol_rad_abs_g
-    State.radiation.vis_in[i] = vis_in
-    State.radiation.IR_in[i] = IR_in
+    State.radiation.abs_vis_rad_sun[i] = theta_sun
+    State.radiation.abs_vis_rad_sha[i] = theta_sha
+
+    (
+        lw_net_rad,
+        T_rad,
+        # T_g, # For Linking to Future Work
+        T_v,
+        lw_net_rad_gro,
+        lw_net_rad_veg,
+    ) = longwave_fluxes(State, Grid, App, i)
+
+    State.radiation.lw_net_rad[i] = lw_net_rad
+    State.radiation.T_rad[i] = T_rad
+    State.radiation.T_v[i] = T_v
+    State.radiation.lw_net_rad_gro[i] = lw_net_rad_gro
+    State.radiation.lw_net_rad_veg[i] = lw_net_rad_veg
+
+
+def input_fluxes(State, Grid, App, i):
+    """Transforms the daily input radiation data to match that of the timestep"""
+    day = i // (1 / Grid.dt_approx)
+    day = int(day)
+    vis_in = State.data.vis_in[day]
+    vis_out = State.data.vis_out[day]
+    IR_in = State.data.IR_in[day]
+    IR_out = State.data.IR_out[day]
+    T_g = State.data.T_ground[day]
+
+    return (vis_in, vis_out, IR_in, IR_out, T_g)
 
 
 def solar_fluxes(State, Grid, App, i):
     ## Equation 4.1
-    # Find the total incoming solar radiation
-    # Convert the daily input data to fractional day
-    day = i // (1 / Grid.dt_approx)
-    day = int(day)
-    vis_in = State.data.vis_in[day]
-    IR_in = State.data.IR_in[day]
+    vis_in = State.radiation.vis_in[i]
+    IR_in = State.radiation.IR_in[i]
     total_rad_i = vis_in + IR_in
 
     # Find breakdown  between all direct and all diffuse
@@ -81,6 +114,7 @@ def solar_fluxes(State, Grid, App, i):
 
     # Load in more parameters calculated in initialization State
     mu = State.mu[i]
+    mu = abs(mu)  # Debugger
     L = State.L[i]
     S = State.S[i]
 
@@ -93,18 +127,26 @@ def solar_fluxes(State, Grid, App, i):
     """ Calculate the Total Solar Radiation Absorbed by the Vegetation and Ground """
     if State.radiation.vegetated_surface:
         # Calculate equation 4.1, 4.2
-        # State.radiation.tot_sol_rad_abs_v[i] = (
-        #    S_dir_tot * State.vector_I_lambda_mu[i] +
-        #    S_dif_tot * State.vector_I_lambda[i])
-        # Calculate Equation 4.1
-        tot_sol_rad_abs_v = (
-            S_dir_vis * State.I_lambda_vis_mu[i]
-            + S_dir_nir * State.I_lambda_nir_mu[i]
-            + S_dif_vis * State.I_lambda_vis[i]
-            + S_dif_nir * State.I_lambda_nir[i]
+        # All lambdas should be between -1 and 1
+        I_lambda_vis_mu = min(1, State.I_lambda_vis_mu[i])
+        I_lambda_vis_mu = max(-1, I_lambda_vis_mu)
+        I_lambda_nir_mu = min(1, State.I_lambda_nir_mu[i])
+        I_lambda_nir_mu = max(-1, I_lambda_nir_mu)
+        I_lambda_vis = min(1, State.I_lambda_vis[i])
+        I_lambda_vis = max(-1, I_lambda_vis)
+        I_lambda_nir = min(1, State.I_lambda_nir[i])
+        I_lambda_nir = max(-1, I_lambda_nir)
+
+        tot_sol_rad_abs_v = max(
+            0,
+            S_dir_vis * I_lambda_vis_mu
+            + S_dir_nir * I_lambda_nir_mu
+            + S_dif_vis * I_lambda_vis
+            + S_dif_nir * I_lambda_nir,
         )
         # Calculate Equation 4.2
-        tot_sol_rad_abs_g = (
+        tot_sol_rad_abs_g = max(
+            0,
             S_dir_vis * K_exp * (1 - State.a_g_lambda_vis_mu[i])
             + S_dir_nir * K_exp * (1 - State.a_g_lambda_nir_mu[i])
             + (
@@ -116,7 +158,7 @@ def solar_fluxes(State, Grid, App, i):
                 S_dir_nir * State.I_down_lambda_nir_mu[i]
                 + S_dif_nir * State.I_down_lambda_nir[i]
             )
-            * (1 - State.a_g_lambda_vis[i])
+            * (1 - State.a_g_lambda_vis[i]),
         )
     else:
         # Calculate equation 4.3
@@ -128,14 +170,30 @@ def solar_fluxes(State, Grid, App, i):
             + S_dif_nir * (1 - State.a_g_lambda_vis[i])
         )
 
+    # Sunlit Plant Area Index - # Equation 4.7
+    L_sun = (1 - K_exp) / K
+    L_sha = L + S - L_sun
+
+    # Calculate absorbed photosynthetically VIS Radiation
+    # Eq 4.5
+    theta_sun = max(
+        0, (State.I_sun_vis_mu[i] * S_dir_vis + State.I_sun_vis[i] * S_dif_vis) / L_sun
+    )
+    # Eq 4.6
+    theta_sha = max(
+        0,
+        (State.I_shade_vis_mu[i] * S_dir_vis + State.I_shade_vis[i] * S_dif_vis)
+        / L_sha,
+    )
+
     return (
         total_rad_i,  # Total Incoming Radiation
         S_dir_tot,  # Total Direct Radiation
         S_dif_tot,  # Total Diffuse Radiation
         tot_sol_rad_abs_v,  # Total Solar Radiation abs. by veg
         tot_sol_rad_abs_g,  # Total Solar Radiation abs. by ground
-        vis_in,  # Visible Incoming Radiation
-        IR_in,  # IR Incoming Radiation
+        theta_sun,  # Absorbed photo active radiation by sunlit canopy
+        theta_sha,  # Absorbed photo active radiation by sunlit canopy
     )
 
 
@@ -143,10 +201,109 @@ def longwave_fluxes(State, Grid, App, i):
     """Second part of Chapter 4"""
     print("Running Longwave Flux Calculator Model\n")
 
+    # Equations 4.9 - 4.20
+    lw_down = State.radiation.IR_in[i]
+    lw_up = State.radiation.IR_out[i]
+    T_g = State.radiation.T_g[i]
+    T_g_prev = T_g
+    if i > 0:
+        T_g_prev = State.radiation.T_g[i - 1]
+    T_v_prev = State.radiation.T_v[0]
+    if i > 0:
+        T_v_prev = State.radiation.T_v[i - 1]
+
+    # Net Longwave radiation at Surface - equation 4.9
+    lw_net_rad = lw_up - lw_down
+
+    # Equation 4.10
+    # W/m2
+    stef_boltz = constants.table_data.constants["stefan-boltzmann constant"]
+    #
+    T_rad = (lw_up / stef_boltz) ** (1 / 4)
+
+    # Equaition 4.19
+    epsilon_soi = 0.96
+    epsilon_sno = 0.97
+    f_sno = State.fsno[i]
+    epsilon_g = epsilon_soi * (1 - f_sno) + epsilon_sno * f_sno
+    # Assumption based on literature values
+    epsilon_v = 0.957
+
+    # Inputs from State
+    L = State.L[i]
+    S = State.S[i]
+    # Step function for veg 4.12
+    step_veg = 0
+
+    # Check if Vegetated Surface or not
+    if not State.radiation.vegetated_surface:
+        T_v = T_g
+        lw_net_rad_veg = 0
+        # Solve for temperature Ground from 4.12
+        # T_g =
+        lw_down_blw_veg = 0
+    else:
+        # Only assume vegetation exists if vegetated_surface flag is turned on
+        if (L + S) > 0.05:
+            step_veg = 1
+
+        # Equation 4.13 and 4.14
+        lw_up_system = lw_up - 4 * epsilon_g * stef_boltz * (T_g_prev) ** 3 * (
+            T_g - T_g_prev
+        )
+        T_v = (
+            (
+                lw_up_system
+                - (1 - epsilon_g) * (1 - epsilon_v) ** 2 * lw_down
+                - epsilon_g * (1 - epsilon_v) * stef_boltz * T_g_prev**4
+            )
+            / (
+                epsilon_v
+                * (1 + (1 - epsilon_g) * (1 - epsilon_v))
+                * stef_boltz
+                * T_v_prev**3
+            )
+            - T_v_prev
+        ) / 4 + T_v_prev
+
+        # Equation 4.16
+        lw_down_blw_veg = (
+            (1 - epsilon_v) * lw_down
+            + epsilon_v * stef_boltz * (T_v_prev) ** 4
+            + 4 * epsilon_v * stef_boltz * (T_v_prev**3) * (T_v - T_v_prev)
+        )
+
+        # Equation 4.18
+        lw_net_rad_veg = (
+            (2 - epsilon_v * (1 - epsilon_g)) * (epsilon_v * stef_boltz * T_v**4)
+            - epsilon_v * epsilon_g * stef_boltz * T_g**4
+            - epsilon_v * (1 + (1 - epsilon_g) * (1 - epsilon_v)) * lw_down
+        )
+
+    # Equation 4.17
+    lw_net_rad_gro = (
+        epsilon_g * stef_boltz * T_g**4
+        - step_veg * epsilon_g * lw_down_blw_veg
+        - (1 - step_veg) * epsilon_g * lw_down
+    )
+
+    return (
+        lw_net_rad,  # Net Longwave Radiation
+        T_rad,  # Radiative Temp at Surface (K)
+        # T_g, # Temp_ground (K)
+        T_v,  # Temp of Vegetation (K)
+        lw_net_rad_gro,  # Net Longwave Radiation Flux for ground (W/m2)
+        lw_net_rad_veg,  # Net Longwave Radiation Flux for veg (W/m2)
+    )
+
 
 ## Helper functions
 def r_vis_calc(total_rad_i: float, vis_frac: float) -> float:
-    """Find the Ratio of direct to toal incident radiation in the visible - Equation 33.7"""
+    """Find the Ratio of direct to total incident radiation in the visible - Equation 33.7"""
+    # From pytests
+    vis_frac = max(0.00, vis_frac)
+    vis_frac = min(1.00, vis_frac)
+
     a_0 = 0.17639
     a_1 = 0.00380
     a_2 = -9.0039 * 10 ** (-6)
@@ -178,61 +335,3 @@ def r_nir_calc(total_rad_i: float, vis_frac: float) -> float:
     R_nir = max(0.01, R_nir)
     R_nir = min(0.99, R_nir)
     return R_nir
-
-
-#     ### The entire script should return the following
-#     State.tot_sol_rad_abs_v[i]
-#     State.tot_sol_rad_abs_g[i]
-#     # The above come from inputs, section 3, etc...
-#     # Equation 4.1, 4.2, 4.3
-#     # Check so the test which you should print out
-#     State.tot_sol_rad_abs[i]
-#     # Equation 4.4
-#     # Equation 4.5
-#     State.tot_abs_photo_active_rad_sun[i]
-#     # Equation 4.6
-#     State.tot_abs_photo_active_rad_sha[i]
-#     # Equation 4.7
-#     State.plant_area_index_sun[i]
-#     State.plant_area_index_sha[i]
-#     # Equation 4.8
-#     State =
-#     print("Running radiation Model\n")
-# def calc_radiation_fluxes(State, i):
-#     ## Radiation subclass
-#     Radiation = State.radiation
-#     # Check if vegetated
-#     if State.vegetated_surface:
-#         # Equation 4.1, 4.2
-#     else:
-#         # Equation 4.3
-#     # Equation 4.1
-#     S_atm_t = State.solar_flux
-#     downward__A = # Incident Direct
-#     sol_flux_inc_beam_t = State.sol_flux_inc_beam[i]
-#     sol_flux_dif_beam_t = State.sol_flux_dif_beam[i]
-#     ### The entire script should return the following
-#     State.tot_sol_rad_abs_v[i] = sol_flux_inc_beam_t + sol_flux_dif_beam_t
-#     State.tot_sol_rad_abs_g[i]
-#     # The above come from inputs, section 3, etc...
-#     # Equation 4.1, 4.2, 4.3
-#     State.sol_flux_inc_beam = GIVEN
-#     State.sol_flux_dif_beam = GIVEN
-#     # Check so the test which you should print out
-#     State.tot_sol_rad_abs[i]
-#     # Equation 4.4
-#     # Equation 4.5
-#     State.tot_abs_photo_active_rad_sun[i]
-#     # Equation 4.6
-#     State.tot_abs_photo_active_rad_sha[i]
-#     # Equation 4.7
-#     State.plant_area_index_sun[i]
-#     State.plant_area_index_sha[i]
-#     # Equation 4.8
-#     State.optical_depth[i]
-#     ## Longwave Fluxes
-#     # Equation 4.9
-#     State.net_lw_rad[i] =
-#     # Equation 4.10
-#     stef_boltzmann = constants.table_data.constants["stefan-boltzmann constant"]
-#     State.temp_rad[i] = (State.net_lw_rad[i]/stef_boltzmann) **(1/4)

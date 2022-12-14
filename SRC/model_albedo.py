@@ -23,7 +23,7 @@ import time_integration
 
 
 def run_albedo_model(State, Grid, App, i):
-    print("Running Alebedo Model\n")
+    print("Running Albedo Model\n")
 
     # Solar Radiation:
     solar(State, Grid, App, i)

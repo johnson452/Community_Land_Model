@@ -215,15 +215,27 @@ class radiation:
         self.solar_dif_tot = np.zeros(NT)
         self.tot_sol_rad_abs_v = np.zeros(NT)  # Vegetation Radiation
         self.tot_sol_rad_abs_g = np.zeros(NT)  # Ground Radiation
+        # Absorbed Photosynthetically active Radiation for sunlit and shaded canopy
+        # Equations 4.5 - 4.8
+        self.abs_vis_rad_sun = np.zeros(NT)
+        self.abs_vis_rad_sha = np.zeros(NT)
+
+        # Outputs from the LW Flux Calculate
+        self.lw_net_rad = np.zeros(NT)
+        self.T_rad = np.zeros(NT)
+        self.T_v = np.ones(NT) * 273.15
+        self.lw_net_rad_gro = np.zeros(NT)
+        self.lw_net_rad_veg = np.zeros(NT)
 
         # Helpful inputs to the Radiation Module
         self.vegetated_surface = parameters.vegetated_surface
 
-        # self.stefan_boltzmann = # W/m2/k4
-
         # Convert the input data to fractional data
         self.vis_in = np.zeros(NT)
         self.IR_in = np.zeros(NT)
+        self.vis_out = np.zeros(NT)
+        self.IR_out = np.zeros(NT)
+        self.T_g = np.zeros(NT)
 
 
 class input_data:
@@ -237,10 +249,12 @@ class input_data:
         self.df = self.df[csv_start:csv_end]
 
         # Save all data as np.arrays for ease of use
+        self.datatypes: dict(str, str) = {"Radiation": "W/m2", "Temperature": "K"}
         self.vis_in = np.array(self.df[parameters.vis_in_str])
         self.vis_out = np.array(self.df[parameters.vis_out_str])
         self.IR_in = np.array(self.df[parameters.IR_in_str])
         self.IR_out = np.array(self.df[parameters.IR_out_str])
+        self.T_ground = np.array(self.df[parameters.T_g_str])
 
 
 class evaporation:
