@@ -12,6 +12,8 @@ import sys
 import pickle
 import numpy as np
 import pandas as pd
+import random
+
 
 script_dir = os.path.dirname(__file__)
 mymodule_dir = os.path.join(script_dir, "..", "OUTPUT")
@@ -127,15 +129,6 @@ class clm_state:
                 )
         else:
             assert "Invalid Location Specified"
-        # Temperature as a function of the day in year modeled by KY using 2021 data
-        # Misfit of the model is 0.1454, which I (KY) think is acceptable
-        self.temperature = (
-            55.0901
-            - 19.6674 * np.cos(2 * np.pi * Grid.times / 365)
-            - 8.6196 * np.sin(2 * np.pi * Grid.times / 365)
-        )
-
-        
 
         # Additional intermediate albedo results for data handoffs
         # self.vector_I_lambda_mu = np.zeros(NT)
@@ -155,6 +148,9 @@ class clm_state:
 
         # Move Radiation STATE Variables to subclass
         self.radiation = radiation(parameters, NT)
+
+        # Move Evaportation STATE Variables to subclass
+        self.evaporation = evaporation(parameters, NT)
 
     def save(self):
         """save class as self.name.txt"""
@@ -245,3 +241,60 @@ class input_data:
         self.vis_out = np.array(self.df[parameters.vis_out_str])
         self.IR_in = np.array(self.df[parameters.IR_in_str])
         self.IR_out = np.array(self.df[parameters.IR_out_str])
+
+
+class evaporation:
+    def __init__(self, parameters, NT, Grid):
+        """Subclass for Evaporation Model"""
+        self.temperature = np.zeros(NT)
+        self.zonal_wind = np.zeros(NT)
+        self.meridional_wind = np.zeros(NT)
+        self.windspeed = np.zeros(NT)
+        self.humidity = np.zeros(NT)
+        self.specific_humidity = np.zeros(NT)
+        self.potential_temperature = np.zeros(NT)
+        self.U_av = np.zeros(NT)
+        for i in range(NT):
+            t = Grid.time(i)
+            # Temperature as a function of the day in year modeled using 2021 data
+            self.temperature[i] = (
+                (
+                    55.0901
+                    - 19.6674 * np.cos(2 * np.pi * t / 365)
+                    - 8.6196 * np.sin(2 * np.pi * t / 365)
+                )
+                - 32
+            ) * (5 / 9) + 273.15
+            self.potential_temperature[i] = (2 / 7) * self.temperature[i]
+            # Approximated using Gaussian distribution N~(6.66,2.81**2)
+            self.windspeed[i] = (
+                random.gauss(6.66, 2.81) * 1.6 / 3.6
+            )  # convert unit to m/s
+            self.zonal_wind[i] = self.windspeed[i] * np.cos(np.pi * random.random())
+            self.meridional_wind[i] = np.sqrt(
+                self.windspeed[i] ** 2 - self.zonal_wind[i] ** 2
+            )
+
+            # Approximated using Gaussian distribution N~(70.77,16.3)
+            self.humidity[i] = random.gauss(70.77, 16.3)
+            if self.humidity[i] > 100:
+                self.humidity[i] = 100
+            # Calculate specific humidity using Tentens equation to compute saturation vapor pressure
+            self.specific_humidity[i] = (
+                0.622
+                * (self.humidity[i] / 100)
+                * 610.78
+                * np.exp(
+                    (17.27 * (self.temperature[i] - 273.15))
+                    / (self.temperature[i] + 35.85)
+                )
+            ) / (
+                101325
+                - 0.378
+                * (self.humidity[i] / 100)
+                * 610.78
+                * np.exp(
+                    (17.27 * (self.temperature[i] - 273.15))
+                    / (self.temperature[i] + 35.85)
+                )
+            )
