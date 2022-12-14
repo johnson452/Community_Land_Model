@@ -283,6 +283,9 @@ class evaporation:
         self.rb = np.zeros(NT)
         self.ra = np.zeros(NT)
         self.q_s = np.zeros(NT)
+        self.E = np.zeros(NT)
+        self.Ev = np.zeros(NT)
+        self.L_E = np.zeros(NT)
         for i in range(NT):
             t = Grid.time(i)
             # Temperature as a function of the day in year modeled using 2021 data
