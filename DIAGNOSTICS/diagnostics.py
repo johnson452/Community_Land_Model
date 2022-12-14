@@ -154,30 +154,29 @@ def diagnostics():
     str_val_y = "lw_net_rad_veg_Wm2"
     plot_general(X, Y, str_val_x, str_val_y)
 
-
     # Evaporation Plots
-        # self.temperature = np.zeros(NT)
-        # self.zonal_wind = np.zeros(NT)
-        # self.meridional_wind = np.zeros(NT)
-        # self.windspeed = np.zeros(NT)
-        # self.humidity = np.zeros(NT)
-        # self.specific_humidity = np.zeros(NT)
-        # self.potential_temperature = np.zeros(NT)
-        # self.U_av = np.zeros(NT)
-        # self.rm = np.zeros(NT)
-        # self.rw = np.zeros(NT)
-        # self.rh = np.zeros(NT)
-        # self.phi = np.zeros(NT)
-        # self.L = np.zeros(NT)
-        # self.Ksi = np.zeros(NT)
-        # self.temperature_ratio = np.zeros(NT)
-        # self.humidity_ratio = np.zeros(NT)
-        # self.q_sat = np.zeros(NT)
-        # self.rb = np.zeros(NT)
-        # self.ra = np.zeros(NT)
-        # self.q_s = np.zeros(NT)
-        # self.E = np.zeros(NT)
-        # self.Ev = np.zeros(NT)
+    # self.temperature = np.zeros(NT)
+    # self.zonal_wind = np.zeros(NT)
+    # self.meridional_wind = np.zeros(NT)
+    # self.windspeed = np.zeros(NT)
+    # self.humidity = np.zeros(NT)
+    # self.specific_humidity = np.zeros(NT)
+    # self.potential_temperature = np.zeros(NT)
+    # self.U_av = np.zeros(NT)
+    # self.rm = np.zeros(NT)
+    # self.rw = np.zeros(NT)
+    # self.rh = np.zeros(NT)
+    # self.phi = np.zeros(NT)
+    # self.L = np.zeros(NT)
+    # self.Ksi = np.zeros(NT)
+    # self.temperature_ratio = np.zeros(NT)
+    # self.humidity_ratio = np.zeros(NT)
+    # self.q_sat = np.zeros(NT)
+    # self.rb = np.zeros(NT)
+    # self.ra = np.zeros(NT)
+    # self.q_s = np.zeros(NT)
+    # self.E = np.zeros(NT)
+    # self.Ev = np.zeros(NT)
     Y = State.evaporation.U_av
     str_val_y = "Wind velocity incident on the leaves"
     plot_general(X, Y, str_val_x, str_val_y)
@@ -188,7 +187,7 @@ def diagnostics():
 
     Y = State.evaporation.windspeed
     str_val_y = "Windspeed"
-    plot_general(X, Y, str_val_x, str_val_y)  
+    plot_general(X, Y, str_val_x, str_val_y)
 
     Y = State.evaporation.phi
     str_val_y = "phi"
