@@ -46,7 +46,7 @@ def test_run():
 
 # Standalone Test
 def test_r_vis_calc():
-    """Tests the r_vis_calc helper function"""
+    """Tests the r_vis_calc helper function - UNIT tests"""
     assert 0.17639 == mrf.r_vis_calc(0, 0)
     assert mrf.r_vis_calc(100, 0.00) == mrf.r_vis_calc(100, -5)
     assert mrf.r_vis_calc(100, 1.00) == mrf.r_vis_calc(100, 12)
@@ -57,7 +57,7 @@ def test_r_vis_calc():
 
 # Standalone Test
 def test_r_nir_calc():
-    """Tests the r_nir_calc helper function"""
+    """Tests the r_nir_calc helper function - UNIT test"""
     assert 0.29548 == mrf.r_nir_calc(0, 0)
     assert 0.29548 == mrf.r_nir_calc(0, 99999)
     assert 0.29548 == mrf.r_nir_calc(0, -99999)
@@ -128,7 +128,7 @@ def test_radiation_hard_code(test_run):
         33.26005597707024,
         -21.399412698558734,
     ]
-
+    # Integration Tests
     assert results_dt[0] == pytest.approx(State_t.radiation.vis_in[dt], 10**-4)
     assert results_dt[1] == pytest.approx(State_t.radiation.vis_out[dt], 10**-4)
     assert results_dt[2] == pytest.approx(State_t.radiation.IR_in[dt], 10**-4)
@@ -173,7 +173,7 @@ def test_radiation_soft_code(test_run):
     """
     Test the STATE variables output
     from radiation module at timestep specified
-    Logic based tests
+    Logic based tests - mainly UNIT tests
     """
     # STATE output from fixture
     State_t, Grid_t = test_run
