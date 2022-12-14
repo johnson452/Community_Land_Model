@@ -152,6 +152,9 @@ class clm_state:
         # Move Evaportation STATE Variables to subclass
         self.evaporation = evaporation(parameters, NT, Grid)
 
+        # Move Sensible Heat STATE Variables to subclass
+        self.sensible_heat = sensible_heat(parameters, NT,Grid)
+
     def save(self):
         """save class as self.name.txt"""
         print("Saving state\n")
@@ -268,6 +271,10 @@ class evaporation:
         self.specific_humidity = np.zeros(NT)
         self.potential_temperature = np.zeros(NT)
         self.U_av = np.zeros(NT)
+        self.rm = np.zeros(NT)
+        self.rw = np.zeros(NT)
+        self.rh = np.zeros(NT)
+        self.phi = np.zeros(NT)
         for i in range(NT):
             t = Grid.time(i)
             # Temperature as a function of the day in year modeled using 2021 data
@@ -312,3 +319,7 @@ class evaporation:
                     / (self.temperature[i] + 35.85)
                 )
             )
+
+class sensible_heat:
+    def __init__(self, parameters, NT, Grid):
+        self.phi = np.zeros(NT)
