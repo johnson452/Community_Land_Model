@@ -41,6 +41,8 @@ class physical_constants:
             "density of ice": 917,
             "boltzmann constant": 1.38065 * 10 ** (-23),
             "stefan-boltzmann constant": 5.67 * 10 ** (-8),
+            "atmosphere pressure": 101325,
+            "von karman constant": 0.4,
         }
 
 
