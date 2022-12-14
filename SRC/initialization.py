@@ -275,6 +275,14 @@ class evaporation:
         self.rw = np.zeros(NT)
         self.rh = np.zeros(NT)
         self.phi = np.zeros(NT)
+        self.L = np.zeros(NT)
+        self.Ksi = np.zeros(NT)
+        self.temperature_ratio = np.zeros(NT)
+        self.humidity_ratio = np.zeros(NT)
+        self.q_sat = np.zeros(NT)
+        self.rb = np.zeros(NT)
+        self.ra = np.zeros(NT)
+        self.q_s = np.zeros(NT)
         for i in range(NT):
             t = Grid.time(i)
             # Temperature as a function of the day in year modeled using 2021 data
@@ -291,6 +299,7 @@ class evaporation:
             self.windspeed[i] = (
                 random.gauss(6.66, 2.81) * 1.6 / 3.6
             )  # convert unit to m/s
+            self.U_av[i] = self.windspeed[i]  # initialize U_av
             self.zonal_wind[i] = self.windspeed[i] * np.cos(np.pi * random.random())
             self.meridional_wind[i] = np.sqrt(
                 self.windspeed[i] ** 2 - self.zonal_wind[i] ** 2
