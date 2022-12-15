@@ -36,6 +36,7 @@ def run_evaporation_model(State, Grid, App, i):
         q_sat(State, Grid, App, i)
         r_b(State, Grid, App, i)
         ra(State, Grid, App, i)
+        ra_prime(State, Grid, App, i)
         canopy_specific_humidity(State, Grid, App, i)
         water_vapor_flux(State, Grid, App, i)
         latent_heat_water_vapor_flux(State, Grid, App, i)
@@ -239,14 +240,20 @@ def ra(State, Grid, App, i):
     return ra
 
 
+def ra_prime(State, Grid, App, i):
+    r = 1 / (0.004 * State.evaporation.U_av[i])
+    State.evaporation.ra_p[i] = r
+    return r
+
+
 def canopy_specific_humidity(State, Grid, App, i):
     ca = 1 / State.evaporation.ra[i]
     cg = 1 / (
         (1000 * State.evaporation.ra[i]) + State.evaporation.ra[i]
     )  # resistance in soil is empirically estimated to be 1000 times of the resistance in air
-    cv = (State.L[i] + State.S[i]) / State.evaporation.rb[
+    cv = ((State.L[i] + State.S[i]) * State.evaporation.ra_p[i]) / State.evaporation.rb[
         i
-    ]  # r'' is assumed to be 1 (eqs.109)
+    ]
     q_atm = State.evaporation.specific_humidity[i]
     q_sat = State.evaporation.q_sat[i]
     q_s = ((ca + cg) * q_atm + cv * q_sat) / (

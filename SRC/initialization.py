@@ -286,6 +286,7 @@ class evaporation:
         self.E = np.zeros(NT)
         self.Ev = np.zeros(NT)
         self.L_E = np.zeros(NT)
+        self.ra_p = np.zeros(NT)
         for i in range(NT):
             t = Grid.time(i)
             # Temperature as a function of the day in year modeled using 2021 data
@@ -337,4 +338,6 @@ class evaporation:
 
 class sensible_heat:
     def __init__(self, parameters, NT, Grid):
-        self.phi = np.zeros(NT)
+        self.T_s = np.zeros(NT)
+        self.H_v = np.zeros(NT)
+        self.H_tot = np.zeros(NT)
