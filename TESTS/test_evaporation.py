@@ -40,7 +40,7 @@ def test_evaporation():
     k = 1
 
     # WARNING: These functions are interrelated. If the order of the tests is changed, the
-    # tests would fail. If any of the functions is called prior to the tests, the tests, would
+    # tests would fail. If any of the functions is called prior to the tests, the tests would
     # fail.
 
     assert (0.00130419499303, 38337.82545) == pytest.approx(
@@ -62,25 +62,27 @@ def test_evaporation():
     assert 0.00404212491432716 == pytest.approx(me.q_sat(State_t, Grid, App, k))
     assert 20.0 == pytest.approx(me.r_b(State_t, Grid, App, k))
     assert 100.0 == pytest.approx(me.ra(State_t, Grid, App, k))
-    assert 0.800967491922388 == pytest.approx(
+    assert 0.09466597079480703 == pytest.approx(
         me.canopy_specific_humidity(State_t, Grid, App, k)
     )
     assert -1094.1526835973655 == pytest.approx(
         me.water_vapor_flux(State_t, Grid, App, k)
     )
-    assert -9.553550853243485e-06 == pytest.approx(
+    assert -1.0863997508149433e-06 == pytest.approx(
         me.vegetation_water_vapor_flux(State_t, Grid, App, k)
     )
 
 
+# Make the variable with randomness fixed at 1 for testing
 class State_test:
     def __init__(self, parameters, Grid):
         NT = Grid.NT
         self.evaporation = evaporation(parameters, NT, Grid)
         self.pft = "BDT temperate"
+        self.L = np.ones(NT)
+        self.S = np.ones(NT)
 
 
-# Make the variable with randomness constant at 1 for testing
 class evaporation:
     def __init__(self, parameter, NT, Grid):
         """Subclass for Evaporation Model"""
