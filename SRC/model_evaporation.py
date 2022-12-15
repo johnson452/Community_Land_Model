@@ -10,6 +10,8 @@ import numpy as np
 import os
 import sys
 
+# L and S of plant can be grabbed from grant's data State.L, State.S
+
 # Colocated modules
 script_dir = os.path.dirname(__file__)
 mymodule_dir = os.path.join(script_dir, ".", "TABLES")
@@ -242,7 +244,9 @@ def canopy_specific_humidity(State, Grid, App, i):
     cg = 1 / (
         (1000 * State.evaporation.ra[i]) + State.evaporation.ra[i]
     )  # resistance in soil is empirically estimated to be 1000 times of the resistance in air
-    cv = (0.05) / State.evaporation.rb[i]
+    cv = (State.L[i] + State.S[i]) / State.evaporation.rb[
+        i
+    ]  # r'' is assumed to be 1 (eqs.109)
     q_atm = State.evaporation.specific_humidity[i]
     q_sat = State.evaporation.q_sat[i]
     q_s = ((ca + cg) * q_atm + cv * q_sat) / (
