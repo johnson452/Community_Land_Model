@@ -302,6 +302,8 @@ class evaporation:
             self.windspeed[i] = (
                 random.gauss(6.66, 2.81) * 1.6 / 3.6
             )  # convert unit to m/s
+            if self.windspeed[i] < 0:
+                self.windspeed[i] = 0
             self.U_av[i] = self.windspeed[i]  # initialize U_av
             self.zonal_wind[i] = self.windspeed[i] * np.cos(np.pi * random.random())
             self.meridional_wind[i] = np.sqrt(
