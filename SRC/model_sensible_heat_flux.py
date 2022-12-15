@@ -14,26 +14,50 @@ script_dir = os.path.dirname(__file__)
 mymodule_dir = os.path.join(script_dir, ".", "TABLES")
 sys.path.append(mymodule_dir)
 import table_2_7_physical_constants as constants
-import table_3_1_plant_optics as pft
-import table_2_4_atmospheric_forcings as af
-import table_5_1_pft_aerodynamic as paero
 
 
 def run_sensible_heat_flux_model(State, Grid, App, i):
     print("Running sensible_heat_flux Model\n")
 
+    # Iteration has been done in the evaporation model.
+    # Hence, it does not required iteration here.
+    canopy_air_temperature(State, Grid, App, i)
+    sensible_heat_flux_v(State, Grid, App, i)
+    sensible_heat_flux_tot(State, Grid, App, i)
 
-def heat_flux_grad(State, Grid, App, i):
-    k = constants.physical_constants().constants["von karman constant"]
-    Ksi = State.evaporation.Ksi[i]
 
-    if Ksi < -1.574:
-        phi = 0.9 * k ** (4 / 3) * ((-Ksi) ** (-1 / 3))
-    elif Ksi >= -1.574 and Ksi < 0:
-        phi = (1 - 16 * Ksi) ** (-0.5)
-    elif Ksi >= 0 and Ksi < 1:
-        phi = 1 + 5 * Ksi
-    else:
-        phi = 5 + Ksi
-    State.sensible_heat.phi[i] = phi
-    return phi
+def sensible_heat_flux_v(State, Grid, App, i):
+    Cp = constants.physical_constants().constants["specific heat capacity of dry air"]
+    H_v = (
+        -1.2
+        * Cp
+        * (State.L[i] + State.S[i])
+        * (State.sensible_heat.T_s[i] - State.radiation.T_v[i])
+        / State.evaporation.rb[i]
+    )
+    State.sensible_heat.H_v[i] = H_v
+    return H_v
+
+
+def sensible_heat_flux_tot(State, Grid, App, i):
+    Cp = constants.physical_constants().constants["specific heat capacity of dry air"]
+    theta = (2 / 7) * State.evaporation.temperature[i]
+    H_tot = -1.2 * Cp * (theta - State.sensible_heat.T_s[i]) / State.evaporation.ra[i]
+    State.sensible_heat.H_tot[i] = H_tot
+    return H_tot
+
+
+def canopy_air_temperature(State, Grid, App, i):
+    ra = State.evaporation.ra[i]
+    rb = State.evaporation.rb[i]
+    ra_p = State.evaporation.ra_p[i]
+    ca = 1 / ra
+    cg = 1 / ra_p
+    cv = (State.L[i] + State.S[i]) / rb
+    T_s = (
+        State.evaporation.temperature[i] * ca
+        + State.radiation.T_g[i] * cg
+        + State.radiation.T_v[i] * cv
+    ) / (ca + cv + cg)
+    State.sensible_heat.T_s[i] = T_s
+    return T_s

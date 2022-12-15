@@ -155,28 +155,6 @@ def diagnostics():
     plot_general(X, Y, str_val_x, str_val_y)
 
     # Evaporation Plots
-    # self.temperature = np.zeros(NT)
-    # self.zonal_wind = np.zeros(NT)
-    # self.meridional_wind = np.zeros(NT)
-    # self.windspeed = np.zeros(NT)
-    # self.humidity = np.zeros(NT)
-    # self.specific_humidity = np.zeros(NT)
-    # self.potential_temperature = np.zeros(NT)
-    # self.U_av = np.zeros(NT)
-    # self.rm = np.zeros(NT)
-    # self.rw = np.zeros(NT)
-    # self.rh = np.zeros(NT)
-    # self.phi = np.zeros(NT)
-    # self.L = np.zeros(NT)
-    # self.Ksi = np.zeros(NT)
-    # self.temperature_ratio = np.zeros(NT)
-    # self.humidity_ratio = np.zeros(NT)
-    # self.q_sat = np.zeros(NT)
-    # self.rb = np.zeros(NT)
-    # self.ra = np.zeros(NT)
-    # self.q_s = np.zeros(NT)
-    # self.E = np.zeros(NT)
-    # self.Ev = np.zeros(NT)
     Y = State.evaporation.U_av
     str_val_y = "Wind velocity incident on the leaves"
     plot_general(X, Y, str_val_x, str_val_y)
@@ -211,6 +189,19 @@ def diagnostics():
 
     Y = State.evaporation.L_E
     str_val_y = "Latent heat"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    # Sensible heat plots
+    Y = State.sensible_heat.H_v
+    str_val_y = "Sensible heat from vegetation"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.sensible_heat.H_tot
+    str_val_y = "Total sensible heat"
+    plot_general(X, Y, str_val_x, str_val_y)
+
+    Y = State.sensible_heat.T_s
+    str_val_y = "canopy air temperature"
     plot_general(X, Y, str_val_x, str_val_y)
 
 
