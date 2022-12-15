@@ -31,24 +31,24 @@ def test_sensible_heat():
     # State class that is held constant for testing purposes
     State_t = State_test(parameters, Grid)
 
-
     # Test state dependent functions
     k = 1
 
     # WARNING: These functions are interrelated. If the order of the tests is changed, the
-    # tests would fail. 
+    # tests would fail.
 
-    assert 1 == ms.canopy_air_temperature(State_t,Grid,App,k)
-    assert 0 == ms.sensible_heat_flux_v(State_t,Grid,App,k)
-    assert 861.12 == ms.sensible_heat_flux_tot(State_t,Grid,App,k)
+    assert 1 == ms.canopy_air_temperature(State_t, Grid, App, k)
+    assert 0 == ms.sensible_heat_flux_v(State_t, Grid, App, k)
+    assert 861.12 == ms.sensible_heat_flux_tot(State_t, Grid, App, k)
+
 
 # Make the variable with randomness fixed at 1 for testing
 class State_test:
     def __init__(self, parameters, Grid):
         NT = Grid.NT
         self.evaporation = evaporation(parameters, NT, Grid)
-        self.radiation = radiation(parameters,NT,Grid)
-        self.sensible_heat = sensible_heat(parameters,NT,Grid)
+        self.radiation = radiation(parameters, NT, Grid)
+        self.sensible_heat = sensible_heat(parameters, NT, Grid)
         self.pft = "BDT temperate"
         self.L = np.ones(NT)
         self.S = np.ones(NT)
@@ -81,10 +81,12 @@ class evaporation:
         self.Ev = np.ones(NT)
         self.ra_p = np.ones(NT)
 
+
 class radiation:
     def __init__(self, parameter, NT, Grid):
         self.T_v = np.ones(NT)
         self.T_g = np.ones(NT)
+
 
 class sensible_heat:
     def __init__(self, parameters, NT, Grid):
