@@ -6,7 +6,8 @@ Contributors: Kevin, Harry, Grant Date: 11/09/2022
 
 Preferred: RTD_Community_Land_Model.pdf
 
-(Some issues with the website: https://community-land-model.readthedocs.io/en/latest/DIAGNOSTICS.html)
+(Some issues with the website:
+https://community-land-model.readthedocs.io/en/latest/DIAGNOSTICS.html)
 
 # Run a sample script and diagnostics
 
