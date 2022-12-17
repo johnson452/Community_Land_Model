@@ -4,6 +4,8 @@ OUTPUT/*
 SRC/__pycache__/*
 *__pycache__*
 .DS_Store
+DOCS
+docs
 
 #Don't Ignore
 !OUTPUT/PLOTS/README.md
