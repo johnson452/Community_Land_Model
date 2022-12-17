@@ -4,7 +4,8 @@ Contributors: Kevin, Harry, Grant Date: 11/09/2022
 
 # Code Documentation:
 
-https://community-land-model.readthedocs.io/en/latest/DIAGNOSTICS.html
+Prefered: RTD_Community_Land_Model.pdf
+(Some issues with the website: https://community-land-model.readthedocs.io/en/latest/DIAGNOSTICS.html)
 
 # Run a sample script and diagnostics
 
@@ -18,7 +19,7 @@ Then run the following code:
 
 Running diagnostics
 
-> > python3 DIAGNOSTICS/diagnostics.py
+> > python3 DIAGNOSTICS/diagnostics.py > OUTPUT/b.out
 
 this will save the plot outputs in the folder OUTPUT/PLOTS
 
